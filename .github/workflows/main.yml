@@ -17,20 +17,40 @@ jobs:
           distribution: temurin
           java-version: '17'
 
+      - name: Find and extract project
+        run: |
+          FILE=$(find . -maxdepth 1 -type f -name '*.bin' | head -n 1)
+          test -n "$FILE"
+          mkdir -p project
+          unzip -q "$FILE" -d project
+          test -f project/IR_NDA_APP_BY_PRATIK/settings.gradle
+
       - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
+        with:
+          accept-android-sdk-licenses: false
+          packages: ''
 
       - name: Accept Android SDK licenses
-        run: yes | sdkmanager --licenses || true
+        run: |
+          yes | sdkmanager --licenses
 
-      - name: Make Gradle executable
-        run: chmod +x gradlew
+      - name: Install Android SDK
+        run: |
+          sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          gradle-version: '8.11'
 
       - name: Build APK
-        run: ./gradlew assembleDebug
+        working-directory: project/IR_NDA_APP_BY_PRATIK
+        run: |
+          gradle :app:assembleDebug --no-daemon
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: IR-NDA-APP-v1.0-BETA
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: project/IR_NDA_APP_BY_PRATIK/app/build/outputs/apk/debug/app-debug.apk
