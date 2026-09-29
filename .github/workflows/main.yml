@@ -11,8 +11,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+
       - name: Checkout source
         uses: actions/checkout@v4
+
 
       - name: Set up Java
         uses: actions/setup-java@v4
@@ -20,33 +22,68 @@ jobs:
           distribution: temurin
           java-version: '17'
 
+
       - name: Find and extract project
         shell: bash
         run: |
-          echo "Files in repository:"
-          find . -maxdepth 2 -type f -print
+          echo "======================================"
+          echo "Searching for source archive..."
+          echo "======================================"
 
           FILE=$(find . -type f -name '*.bin' -print -quit)
 
           if [ -z "$FILE" ]; then
             echo "ERROR: No .bin source file found."
+            echo "Repository files:"
+            find . -maxdepth 3 -type f -print
             exit 1
           fi
 
-          echo "Found source archive: $FILE"
+          echo "Found source archive:"
+          echo "$FILE"
 
-          mkdir -p project
-
+          echo "======================================"
           echo "Testing archive..."
+          echo "======================================"
+
           unzip -t "$FILE"
 
-          echo "Extracting archive..."
+          echo "======================================"
+          echo "Extracting project..."
+          echo "======================================"
+
+          rm -rf project
+          mkdir -p project
+
           unzip -q "$FILE" -d project
 
-          echo "Extracted files:"
-          find project -maxdepth 3 -type f -print
+          echo "======================================"
+          echo "Extracted project files:"
+          echo "======================================"
 
-          test -f project/settings.gradle
+          find project -maxdepth 4 -type f -print
+
+          echo "======================================"
+          echo "Checking Android project..."
+          echo "======================================"
+
+          if [ ! -f "project/settings.gradle" ]; then
+            echo "ERROR: settings.gradle not found."
+            exit 1
+          fi
+
+          if [ ! -f "project/build.gradle" ]; then
+            echo "ERROR: build.gradle not found."
+            exit 1
+          fi
+
+          if [ ! -f "project/app/build.gradle" ]; then
+            echo "ERROR: app/build.gradle not found."
+            exit 1
+          fi
+
+          echo "Android project detected successfully."
+
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v4
@@ -54,23 +91,64 @@ jobs:
           accept-android-sdk-licenses: false
           packages: ''
 
+
       - name: Accept Android SDK licenses
         run: |
-          yes | sdkmanager --licenses
+          yes | sdkmanager --licenses || true
+
 
       - name: Install Android SDK
         run: |
-          sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+          sdkmanager \
+            "platform-tools" \
+            "platforms;android-35" \
+            "build-tools;35.0.0"
+
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v6
         with:
           gradle-version: '8.11'
 
+
+      - name: Check Gradle project
+        working-directory: project
+        run: |
+          echo "Project directory:"
+          pwd
+
+          echo "Project files:"
+          ls -la
+
+          echo "App directory:"
+          ls -la app
+
+          echo "Gradle version:"
+          gradle --version
+
+
       - name: Build APK
         working-directory: project
         run: |
-          gradle :app:assembleDebug --no-daemon
+          echo "======================================"
+          echo "Building IR NDA APP by PRATIK..."
+          echo "======================================"
+
+          gradle :app:assembleDebug --no-daemon --stacktrace
+
+
+      - name: Check APK
+        run: |
+          echo "======================================"
+          echo "APK files:"
+          echo "======================================"
+
+          find project/app/build/outputs -type f -print
+
+          test -f project/app/build/outputs/apk/debug/app-debug.apk
+
+          echo "APK successfully created."
+
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
@@ -78,12 +156,16 @@ jobs:
           name: IR-NDA-APP-v1.1.0
           path: project/app/build/outputs/apk/debug/app-debug.apk
 
+
       - name: Publish APK to GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           TAG="v1.1.${{ github.run_number }}"
+
+          echo "Creating GitHub Release: $TAG"
+
           gh release create "$TAG" \
             "project/app/build/outputs/apk/debug/app-debug.apk" \
             --title "IR NDA APP by PRATIK $TAG" \
-            --notes "IR NDA APP by PRATIK — v1.1.0"
+            --notes "IR NDA APP by PRATIK — Version 1.1.0"
