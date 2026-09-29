@@ -21,11 +21,31 @@ jobs:
           java-version: '17'
 
       - name: Find and extract project
+        shell: bash
         run: |
-          FILE=$(find . -maxdepth 1 -type f -name '*.bin' | head -n 1)
-          test -n "$FILE"
+          echo "Files in repository:"
+          find . -maxdepth 2 -type f -print
+
+          FILE=$(find . -type f -name '*.bin' -print -quit)
+
+          if [ -z "$FILE" ]; then
+            echo "ERROR: No .bin source file found."
+            exit 1
+          fi
+
+          echo "Found source archive: $FILE"
+
           mkdir -p project
+
+          echo "Testing archive..."
+          unzip -t "$FILE"
+
+          echo "Extracting archive..."
           unzip -q "$FILE" -d project
+
+          echo "Extracted files:"
+          find project -maxdepth 3 -type f -print
+
           test -f project/IR_NDA_APP_BY_PRATIK/settings.gradle
 
       - name: Set up Android SDK
@@ -55,15 +75,15 @@ jobs:
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: IR-NDA-APP-v1.0-BETA
+          name: IR-NDA-APP-v1.1.0
           path: project/IR_NDA_APP_BY_PRATIK/app/build/outputs/apk/debug/app-debug.apk
 
       - name: Publish APK to GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          TAG="v1.0.${{ github.run_number }}"
+          TAG="v1.1.${{ github.run_number }}"
           gh release create "$TAG" \
             "project/IR_NDA_APP_BY_PRATIK/app/build/outputs/apk/debug/app-debug.apk" \
             --title "IR NDA APP by PRATIK $TAG" \
-            --notes "IR NDA APP by PRATIK - Beta APK"
+            --notes "IR NDA APP by PRATIK — v1.1.0 Beta"
