@@ -46,7 +46,7 @@ jobs:
           echo "Extracted files:"
           find project -maxdepth 3 -type f -print
 
-          test -f project/IR_NDA_APP_BY_PRATIK/settings.gradle
+          test -f project/settings.gradle
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v4
@@ -68,7 +68,7 @@ jobs:
           gradle-version: '8.11'
 
       - name: Build APK
-        working-directory: project/IR_NDA_APP_BY_PRATIK
+        working-directory: project
         run: |
           gradle :app:assembleDebug --no-daemon
 
@@ -76,7 +76,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: IR-NDA-APP-v1.1.0
-          path: project/IR_NDA_APP_BY_PRATIK/app/build/outputs/apk/debug/app-debug.apk
+          path: project/app/build/outputs/apk/debug/app-debug.apk
 
       - name: Publish APK to GitHub Release
         env:
@@ -84,6 +84,6 @@ jobs:
         run: |
           TAG="v1.1.${{ github.run_number }}"
           gh release create "$TAG" \
-            "project/IR_NDA_APP_BY_PRATIK/app/build/outputs/apk/debug/app-debug.apk" \
+            "project/app/build/outputs/apk/debug/app-debug.apk" \
             --title "IR NDA APP by PRATIK $TAG" \
-            --notes "IR NDA APP by PRATIK — v1.1.0 Beta"
+            --notes "IR NDA APP by PRATIK — v1.1.0"
