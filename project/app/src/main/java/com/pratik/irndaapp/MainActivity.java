@@ -216,7 +216,7 @@ public class MainActivity extends Activity {
         setContentView(splash);
         handler.postDelayed(()->{
             if(Build.VERSION.SDK_INT>=19) getWindow().getDecorView().setSystemUiVisibility(0);
-            build();
+            startActivity(new Intent(this, SntDashboardActivity.class)); finish();
         },2000);
     }
 
