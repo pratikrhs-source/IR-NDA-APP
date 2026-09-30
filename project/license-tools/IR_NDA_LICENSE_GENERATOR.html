@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>IR NDA APP License Generator v1.2.8</title>
+<style>
+body{font-family:Arial,sans-serif;background:#f4f7fb;margin:0;padding:18px;color:#23313f}.card{max-width:560px;margin:10px auto;background:#fff;border-radius:20px;padding:22px;box-shadow:0 6px 24px rgba(0,0,0,.08)}
+h1{text-align:center;margin:0;color:#122b44}.sub{text-align:center;color:#277e52;font-weight:700}.hint{line-height:1.5;color:#586575}label{font-weight:700;display:block;margin:16px 0 7px}input,select{box-sizing:border-box;width:100%;padding:14px;border:1px solid #d7dee8;border-radius:12px;font-size:16px;background:#fff}button{width:100%;padding:14px;border:0;border-radius:12px;background:#1970c0;color:#fff;font-size:16px;font-weight:700;margin-top:14px}.copy{background:#277e52}.result{margin-top:18px;padding:18px;background:#eef7ff;border-radius:12px}.key{font-size:23px;font-weight:800;letter-spacing:2px;text-align:center;word-break:break-all}.expiry{text-align:center;margin-top:9px;font-weight:700}.small{font-size:12px;color:#777;text-align:center;margin-top:18px}.danger{color:#a33;font-size:12px}
+</style></head><body><div class="card">
+<h1>IR NDA APP</h1><p class="sub">Offline License Generator • v1.2.8</p>
+<p class="hint">Keep this generator private. Enter the customer's Device ID exactly as shown in the app, choose the validity, generate the key, then copy it to WhatsApp.</p>
+<label>Customer Device ID</label><input id="device" placeholder="Paste Device ID here" autocomplete="off">
+<label>License Validity</label><select id="validity"><option value="7">7 Days</option><option value="30">30 Days</option><option value="90">90 Days</option><option value="180">180 Days</option><option value="365" selected>1 Year</option><option value="lifetime">Lifetime</option></select>
+<button onclick="generate()">GENERATE LICENSE KEY</button>
+<div id="result" class="result" style="display:none"><div id="key" class="key"></div><div id="expiry" class="expiry"></div></div>
+<button id="copy" class="copy" style="display:none" onclick="copyKey()">COPY KEY FOR WHATSAPP</button>
+<p class="small">The key is bound to this Device ID. Do not send this generator to customers.</p>
+<p class="danger">Offline licensing is convenience-level protection; it is not server-grade DRM.</p>
+</div>
+<script>
+const SECRET='PRATIK_IR_NDA_2026_OFFLINE_LICENSE_V2';
+function hash32(s){let h=2166136261>>>0;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)>>>0;}return h>>>0;}
+function hex8(n){return (n>>>0).toString(16).toUpperCase().padStart(8,'0');}
+function fmtDate(d){return d.toISOString().slice(0,10).replaceAll('-','');}
+function displayDate(ymd){if(ymd==='99991231')return 'Lifetime';return ymd.slice(6,8)+'/'+ymd.slice(4,6)+'/'+ymd.slice(0,4);}
+function makeKey(id,expiry){const raw=expiry+hex8(hash32(SECRET+'|'+id+'|'+expiry))+hex8(hash32(expiry+'|'+id+'|'+SECRET));return raw.substring(0,4)+'-'+raw.substring(4,8)+'-'+raw.substring(8,12)+'-'+raw.substring(12,16)+'-'+raw.substring(16,20);}
+function generate(){const id=document.getElementById('device').value.trim().toUpperCase();if(!id){alert('Please enter Device ID.');return;}const v=document.getElementById('validity').value;let expiry;if(v==='lifetime'){expiry='99991231';}else{const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()+Number(v));expiry=fmtDate(d);}const key=makeKey(id,expiry);document.getElementById('key').textContent=key;document.getElementById('expiry').textContent='Valid until: '+displayDate(expiry);document.getElementById('result').style.display='block';document.getElementById('copy').style.display='block';}
+function copyKey(){const k=document.getElementById('key').textContent;navigator.clipboard.writeText(k).then(()=>alert('License key copied. Paste it into WhatsApp.')).catch(()=>{const x=document.createElement('textarea');x.value=k;document.body.appendChild(x);x.select();document.execCommand('copy');x.remove();alert('License key copied.');});}
+</script></body></html>

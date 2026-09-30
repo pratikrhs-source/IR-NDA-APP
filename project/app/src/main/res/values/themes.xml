@@ -1,0 +1,6 @@
+<resources>
+<style name="Theme.IRNDAApp" parent="android:style/Theme.Material.Light.NoActionBar">
+    <item name="android:fontFamily">sans</item><item name="android:colorAccent">#246BCE</item>
+    <item name="android:navigationBarColor">#17324D</item><item name="android:statusBarColor">#17324D</item>
+</style>
+</resources>

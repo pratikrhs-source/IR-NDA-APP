@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="bg">#F5F7FA</color>
+    <color name="blue">#246BCE</color>
+    <color name="green">#198754</color>
+    <color name="navy">#17324D</color>
+    <color name="white">#FFFFFF</color>
+    <string name="app_name">IR NDA APP by PRATIK</string>
+    <style name="Theme.IRNDAApp" parent="android:style/Theme.Material.Light.NoActionBar">
+    <item name="android:fontFamily">sans</item><item name="android:colorAccent">#246BCE</item>
+    <item name="android:navigationBarColor">#17324D</item><item name="android:statusBarColor">#17324D</item>
+</style>
+</resources>

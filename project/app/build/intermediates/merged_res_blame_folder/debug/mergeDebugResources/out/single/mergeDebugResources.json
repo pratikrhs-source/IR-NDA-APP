@@ -1,0 +1,10 @@
+[
+    {
+        "merged": "com.pratik.irndaapp-debug-11:/drawable_ic_launcher.png.flat",
+        "source": "com.pratik.irndaapp-main-13:/drawable/ic_launcher.png"
+    },
+    {
+        "merged": "com.pratik.irndaapp-debug-11:/xml_paths.xml.flat",
+        "source": "com.pratik.irndaapp-main-13:/xml/paths.xml"
+    }
+]

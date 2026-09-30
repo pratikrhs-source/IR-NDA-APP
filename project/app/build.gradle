@@ -1,0 +1,7 @@
+plugins { id 'com.android.application' }
+
+android { namespace 'com.pratik.irndaapp'; compileSdk 35
+    defaultConfig { applicationId 'com.pratik.irndaapp'; minSdk 23; targetSdk 35; versionCode 12; versionName '1.2.9' }
+}
+
+dependencies { implementation 'androidx.core:core:1.15.0' }

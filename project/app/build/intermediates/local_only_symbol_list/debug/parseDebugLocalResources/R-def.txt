@@ -1,0 +1,11 @@
+R_DEF: Internal format may change without notice
+local
+color bg
+color blue
+color green
+color navy
+color white
+drawable ic_launcher
+string app_name
+style Theme.IRNDAApp
+xml paths
