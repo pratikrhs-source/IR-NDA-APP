@@ -680,9 +680,7 @@ void showStationProfile() {
             .setView(sv)
             .setNegativeButton("CANCEL",null)
             .setPositiveButton("SAVE",(d,w)->{
-                android.content.SharedPreferences.Editor e=sp.edit();
-                for(int i=0;i<keys.length;i++) e.putString(keys[i],fields[i].getText().toString().trim());
-                e.apply();
+                saveStationProfileData(keys, fields);
                 Toast.makeText(this,"Station profile saved.",Toast.LENGTH_SHORT).show();
             }).show();
     }
@@ -692,6 +690,92 @@ void showStationProfile() {
         String st=sp.getString("station",""), in=sp.getString("interlocking",""), ei=sp.getString("ei_make",""), re=sp.getString("relay",""), rn=sp.getString("relay_nomenclature",""), ra=sp.getString("rack",""), pa=sp.getString("panel",""), pm=sp.getString("point_machine",""), si=sp.getString("signal",""), de=sp.getString("detection",""), bl=sp.getString("block",""), ka=sp.getString("kavach",""), po=sp.getString("power",""), ou=sp.getString("outdoor",""), ot=sp.getString("other","");
         if(st.isEmpty() && in.isEmpty() && re.isEmpty()) return "STATION PROFILE: Not configured. Complete the profile before installation-specific diagnosis.\n\n";
         return "ACTIVE STATION PROFILE\nStation: "+st+"\nInterlocking: "+in+"\nEI/Interlocking Make: "+ei+"\nRelay Family: "+re+"\nRelay Nomenclature: "+rn+"\nRack/Shelf: "+ra+"\nPanel/VDU: "+pa+"\nPoint Machine: "+pm+"\nSignal Type: "+si+"\nDetection: "+de+"\nBlock System: "+bl+"\nKAVACH: "+ka+"\nPower: "+po+"\nOutdoor: "+ou+"\nOther: "+ot+"\n\n";
+    }
+
+    private String getConfigurationGuidance(String faultType) {
+        String interlocking = getStationProfileValue("interlocking").toUpperCase();
+        String relay = getStationProfileValue("relay").toUpperCase();
+        String area = getStationProfileValue("outdoor").toUpperCase();
+
+        StringBuilder g = new StringBuilder();
+
+        if (interlocking.contains("EI")) {
+            g.append("EI CONFIGURATION: Check approved EI diagnostics, vital I/O/interface status, communication and event logs.\\n");
+        } else if (interlocking.contains("RRI")) {
+            g.append("RRI CONFIGURATION: Trace panel command -> relay logic -> location box -> field equipment and correspondence.\\n");
+        } else if (interlocking.contains("PI")) {
+            g.append("PI CONFIGURATION: Verify approved panel/interlocking circuit, relay/interface path and field correspondence.\\n");
+        }
+
+        if (relay.contains("SIEMENS") || relay.contains("K-") || relay.contains("K50")) {
+            g.append("RELAY CONFIGURATION: Siemens/K-series information is present; verify exact relay designation and approved circuit before testing.\\n");
+        }
+
+        if (area.contains("OUTDOOR") || area.contains("LOCATION")) {
+            g.append("FIELD CONFIGURATION: Include location box, cable route, field equipment and outdoor correspondence in the fault path.\\n");
+        }
+
+        if (faultType != null && faultType.toUpperCase().contains("POINT")) {
+            g.append("POINT FOCUS: Check command, control output, point machine, detection and NWKR/RWKR or equivalent correspondence.\\n");
+        } else if (faultType != null && faultType.toUpperCase().contains("SIGNAL")) {
+            g.append("SIGNAL FOCUS: Check route conditions, detection, points, signal control and final outdoor indication.\\n");
+        } else if (faultType != null && faultType.toUpperCase().contains("TRACK")) {
+            g.append("DETECTION FOCUS: Check field detection/evaluator/interface, communication and authorised reset procedure.\\n");
+        }
+
+        return g.toString().trim();
+    }
+
+    private String getSavedStationContext() {
+        String station = getStationProfileValue("station");
+        String interlocking = getStationProfileValue("interlocking");
+        String relay = getStationProfileValue("relay");
+        String outdoor = getStationProfileValue("outdoor");
+        String point = getStationProfileValue("point_machine");
+        String detection = getStationProfileValue("detection");
+        String block = getStationProfileValue("block");
+        String kavach = getStationProfileValue("kavach");
+
+        StringBuilder b = new StringBuilder();
+        if (!station.isEmpty()) b.append("Station: ").append(station).append("\n");
+        if (!interlocking.isEmpty()) b.append("Interlocking: ").append(interlocking).append("\n");
+        if (!relay.isEmpty()) b.append("Relay: ").append(relay).append("\n");
+        if (!point.isEmpty()) b.append("Point Machine: ").append(point).append("\n");
+        if (!detection.isEmpty()) b.append("Detection: ").append(detection).append("\n");
+        if (!block.isEmpty()) b.append("Block: ").append(block).append("\n");
+        if (!kavach.isEmpty()) b.append("KAVACH/TCAS: ").append(kavach).append("\n");
+        if (!outdoor.isEmpty()) b.append("Outdoor Equipment: ").append(outdoor);
+
+        return b.toString().trim();
+    }
+
+    private String getRelayLibraryGuidance(String relayInfo, String faultType) {
+        String relay = relayInfo == null ? "" : relayInfo.trim();
+        String fault = faultType == null ? "" : faultType.trim().toUpperCase();
+
+        if (relay.isEmpty()) {
+            return "No relay designation is saved in Station Profile. Verify the approved station circuit and relay nomenclature before testing.";
+        }
+
+        String r = relay.toUpperCase();
+        StringBuilder b = new StringBuilder();
+        b.append("Relay configuration recorded: ").append(relay).append("\n");
+
+        if (r.contains("K-50") || r.contains("K50") || r.contains("SIEMENS")) {
+            b.append("Siemens/K-series reference is indicated. Use the exact relay designation, approved circuit and verified manufacturer/RDSO data before applying any test value.\n");
+        }
+
+        if (r.contains("NWKR") || r.contains("RWKR") || fault.contains("POINT")) {
+            b.append("Point/detection relevance: verify point control, detection correspondence and the applicable NWKR/RWKR or equivalent relay path.\n");
+        }
+
+        if (r.contains("WNR") || r.contains("WRR") || r.contains("HPR") || r.contains("DPR") || r.contains("ECR")) {
+            b.append("Relay designation is station/circuit dependent. Confirm its exact function from the approved circuit before diagnosis.\n");
+        }
+
+        b.append("Relay Library values such as contact count, coil resistance, pick-up/drop-away values must be verified against the applicable official document and exact relay variant.");
+
+        return b.toString();
     }
 
     void showStationAwareFaultFinder() {
@@ -715,6 +799,19 @@ void showStationProfile() {
     root.addView(info);
 
     ScrollView scroll = new ScrollView(this);
+        
+        String savedStationContext = getSavedStationContext();
+        if (!savedStationContext.isEmpty()) {
+            TextView stationContext = new TextView(this);
+            stationContext.setText("STATION CONFIGURATION • AUTO LOADED\n\n"
+                    + savedStationContext);
+            stationContext.setTextSize(13);
+            stationContext.setTextColor(Color.rgb(35, 45, 58));
+            stationContext.setPadding(28, 20, 28, 20);
+            stationContext.setBackgroundColor(Color.rgb(235, 241, 248));
+            root.addView(stationContext);
+        }
+
     LinearLayout form = new LinearLayout(this);
     form.setOrientation(LinearLayout.VERTICAL);
     form.setPadding(4, 4, 4, 16);
@@ -953,6 +1050,23 @@ void showStationProfile() {
         r.append("RDSO/CAMTECH guidance and manufacturer documentation.");
 
         result.setText(r.toString());
+
+            String relayGuidance = getRelayLibraryGuidance(
+                    getStationProfileValue("relay"), ft);
+            if (!relayGuidance.isEmpty()) {
+                result.append("\n\nRELAY LIBRARY REFERENCE\n");
+                result.append(relayGuidance);
+            }
+
+            String cfg = getConfigurationGuidance(ft);
+            if (!cfg.isEmpty()) {
+                TextView cfgView = new TextView(this);
+                cfgView.setText("STATION CONFIGURATION GUIDANCE\\n\\n" + cfg);
+                cfgView.setTextSize(13);
+                cfgView.setTextColor(Color.rgb(35, 45, 58));
+                cfgView.setPadding(20, 18, 20, 18);
+                root.addView(cfgView);
+            }
     });
 
     root.addView(scroll, new LinearLayout.LayoutParams(
@@ -968,6 +1082,23 @@ void showStationProfile() {
 
     setContentView(root);
 }
+
+    private void saveStationProfileData(String[] keys, EditText[] fields) {
+        android.content.SharedPreferences sp =
+                getSharedPreferences("station_profile", MODE_PRIVATE);
+        android.content.SharedPreferences.Editor e = sp.edit();
+
+        for (int i = 0; i < keys.length && i < fields.length; i++) {
+            e.putString(keys[i], fields[i].getText().toString().trim());
+        }
+
+        e.apply();
+    }
+
+    private String getStationProfileValue(String key) {
+        return getSharedPreferences("station_profile", MODE_PRIVATE)
+                .getString(key, "");
+    }
 
 void startFaultDiagnosis() {
         android.content.SharedPreferences sp=getSharedPreferences("station_profile",MODE_PRIVATE);
