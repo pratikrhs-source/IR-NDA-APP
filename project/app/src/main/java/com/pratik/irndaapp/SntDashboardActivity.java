@@ -255,12 +255,12 @@ public class SntDashboardActivity extends Activity {
         final String[] labels = {"Station Name / Code","Interlocking: PI / RRI / EI","Interlocking / EI Make, Model, Version","Relay Family / Siemens K-series","Station Relay Nomenclature / Designation","Relay Room Rack / Shelf Details","Panel / VDU Make and Type","Point Machine Make / Type","Signal / Lamp / LED Type","Track Detection / MSDAC / Track Circuit","BPAC / HASSDAC / UFSBI / Block System","KAVACH / TCAS Make and Version","Signalling Power Supply Arrangement","Outdoor Equipment / Location Box Details","Other Indoor / Outdoor Equipment"};
         final android.content.SharedPreferences sp = getSharedPreferences("station_profile", MODE_PRIVATE);
         LinearLayout box = new LinearLayout(this);
-        box.setOrientation(LinearLayout.VERTICAL);
+        box.setOrientation(LinearLayout.VERTICAL); box.setBackgroundColor(Color.rgb(245,247,250));
         box.setPadding(dp(12),dp(4),dp(12),dp(4));
         final EditText[] fields = new EditText[keys.length];
         for(int i=0;i<keys.length;i++) {
             fields[i]=new EditText(this);
-            fields[i].setHint(labels[i]);
+            fields[i].setHint(labels[i]); fields[i].setTextSize(14); fields[i].setTextColor(Color.rgb(35,45,58));
             fields[i].setSingleLine(false);
             fields[i].setText(sp.getString(keys[i],""));
             box.addView(fields[i],new LinearLayout.LayoutParams(-1,dp(52)));
@@ -268,7 +268,7 @@ public class SntDashboardActivity extends Activity {
         ScrollView sv=new ScrollView(this);
         sv.addView(box);
         new AlertDialog.Builder(this)
-            .setTitle("STATION PROFILE")
+            .setTitle("STATION PROFILE • CONFIGURATION")
             .setMessage("Enter the actual station configuration. Fault Finder will use this profile before diagnosis.")
             .setView(sv)
             .setNegativeButton("CANCEL",null)
