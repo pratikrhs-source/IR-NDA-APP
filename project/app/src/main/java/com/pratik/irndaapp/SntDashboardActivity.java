@@ -71,9 +71,27 @@ public class SntDashboardActivity extends Activity {
     GradientDrawable cardBackground() {
         GradientDrawable g = new GradientDrawable();
         g.setColor(Color.WHITE);
-        g.setCornerRadius(dp(16));
-        g.setStroke(dp(1), Color.rgb(225,230,236));
+        g.setCornerRadius(dp(18));
+        g.setStroke(dp(1), Color.rgb(220,226,233));
         return g;
+    }
+
+    GradientDrawable headerBackground() {
+        GradientDrawable g = new GradientDrawable(
+            GradientDrawable.Orientation.TL_BR,
+            new int[]{Color.rgb(7,38,68),Color.rgb(18,91,126)});
+        g.setCornerRadius(dp(22));
+        return g;
+    }
+
+    int iconForModule(String title) {
+        if (title.contains("SIGNAL") || title.contains("POINT"))
+            return R.drawable.ic_signal_thumb;
+        if (title.contains("RELAY") || title.contains("CIRCUIT"))
+            return R.drawable.ic_relay_thumb;
+        if (title.contains("KAVACH") || title.contains("MSDAC") || title.contains("BPAC"))
+            return R.drawable.ic_equipment_thumb;
+        return R.drawable.ic_tools_thumb;
     }
 
     TextView text(String s, float size, boolean bold) {
@@ -95,15 +113,35 @@ public class SntDashboardActivity extends Activity {
         root.setPadding(dp(16),dp(18),dp(16),dp(24));
         root.setBackgroundColor(Color.rgb(245,247,250));
 
-        TextView title = text("IR S&T FIELD ASSISTANT",25,true);
-        title.setTextColor(Color.rgb(15,55,95));
-        root.addView(title);
+        LinearLayout header = new LinearLayout(this);
+        header.setOrientation(LinearLayout.HORIZONTAL);
+        header.setGravity(Gravity.CENTER_VERTICAL);
+        header.setPadding(dp(18),dp(16),dp(18),dp(16));
+        header.setBackground(headerBackground());
+
+        ImageView headerIcon = new ImageView(this);
+        headerIcon.setImageResource(R.drawable.ic_signal_thumb);
+        headerIcon.setPadding(dp(4),dp(4),dp(4),dp(4));
+        header.addView(headerIcon,new LinearLayout.LayoutParams(dp(72),dp(72)));
+
+        LinearLayout headerText = new LinearLayout(this);
+        headerText.setOrientation(LinearLayout.VERTICAL);
+
+        TextView title = text("IR S&T FIELD ASSISTANT",23,true);
+        title.setTextColor(Color.WHITE);
+        title.setPadding(dp(8),0,0,dp(2));
+        headerText.addView(title);
 
         TextView subtitle = text(
             "Railway Signalling • Maintenance • Troubleshooting",
-            14,false);
-        subtitle.setTextColor(Color.rgb(85,95,108));
-        root.addView(subtitle);
+            12,false);
+        subtitle.setTextColor(Color.rgb(225,238,248));
+        subtitle.setPadding(dp(8),0,0,0);
+        headerText.addView(subtitle);
+
+        header.addView(headerText,new LinearLayout.LayoutParams(0,-2,1));
+        root.addView(header,new LinearLayout.LayoutParams(-1,-2));
+
 
         search = new EditText(this);
         search.setHint("Search relay, equipment, fault or module…");
@@ -135,6 +173,14 @@ public class SntDashboardActivity extends Activity {
             new LinearLayout.LayoutParams(-1,0,1);
         root.addView(scroll,scrollLp);
 
+        TextView footer = text(
+            "DEVELOPED BY PRATIK MUKHERJEE (SIM/ASN/ER)",
+            10,true);
+        footer.setGravity(Gravity.CENTER);
+        footer.setTextColor(Color.rgb(15,72,105));
+        footer.setPadding(0,dp(10),0,0);
+        root.addView(footer,new LinearLayout.LayoutParams(-1,-2));
+
         setContentView(root);
         render("");
 
@@ -164,14 +210,35 @@ public class SntDashboardActivity extends Activity {
             card.setPadding(dp(6),dp(7),dp(6),dp(7));
             card.setBackground(cardBackground());
 
-            TextView h = text(m[0],16,true);
+            LinearLayout row = new LinearLayout(this);
+            row.setOrientation(LinearLayout.HORIZONTAL);
+            row.setGravity(Gravity.CENTER_VERTICAL);
+
+            ImageView icon = new ImageView(this);
+            icon.setImageResource(iconForModule(m[0]));
+            icon.setPadding(dp(9),dp(9),dp(9),dp(9));
+
+            GradientDrawable iconBg = new GradientDrawable();
+            iconBg.setColor(Color.rgb(235,243,249));
+            iconBg.setCornerRadius(dp(14));
+            icon.setBackground(iconBg);
+
+            row.addView(icon,new LinearLayout.LayoutParams(dp(66),dp(66)));
+
+            LinearLayout words = new LinearLayout(this);
+            words.setOrientation(LinearLayout.VERTICAL);
+
+            TextView h = text(m[0],15,true);
             h.setTextColor(Color.rgb(18,72,115));
 
-            TextView d = text(m[1],13,false);
+            TextView d = text(m[1],12,false);
             d.setTextColor(Color.rgb(75,85,98));
 
-            card.addView(h);
-            card.addView(d);
+            words.addView(h);
+            words.addView(d);
+            row.addView(words,new LinearLayout.LayoutParams(0,-2,1));
+
+            card.addView(row);
 
             LinearLayout.LayoutParams lp =
                 new LinearLayout.LayoutParams(-1,-2);
@@ -184,8 +251,8 @@ public class SntDashboardActivity extends Activity {
     }
 
     void showStationProfile() {
-        final String[] keys = {"station","interlocking","relay","panel","point_machine","detection","block","kavach","other"};
-        final String[] labels = {"Station Name / Code","Interlocking: PI / RRI / EI","Relay Family / Siemens K-series","Panel / VDU","Point Machine Make / Type","Track Detection / MSDAC / Track Circuit","BPAC / HASSDAC / UFSBI / Block System","KAVACH / TCAS Make and Version","Other Indoor / Outdoor Equipment"};
+        final String[] keys = {"station","interlocking","ei_make","relay","relay_nomenclature","rack","panel","point_machine","signal","detection","block","kavach","power","outdoor","other"};
+        final String[] labels = {"Station Name / Code","Interlocking: PI / RRI / EI","Interlocking / EI Make, Model, Version","Relay Family / Siemens K-series","Station Relay Nomenclature / Designation","Relay Room Rack / Shelf Details","Panel / VDU Make and Type","Point Machine Make / Type","Signal / Lamp / LED Type","Track Detection / MSDAC / Track Circuit","BPAC / HASSDAC / UFSBI / Block System","KAVACH / TCAS Make and Version","Signalling Power Supply Arrangement","Outdoor Equipment / Location Box Details","Other Indoor / Outdoor Equipment"};
         final android.content.SharedPreferences sp = getSharedPreferences("station_profile", MODE_PRIVATE);
         LinearLayout box = new LinearLayout(this);
         box.setOrientation(LinearLayout.VERTICAL);
@@ -215,9 +282,9 @@ public class SntDashboardActivity extends Activity {
 
     String stationProfileSummary() {
         android.content.SharedPreferences sp=getSharedPreferences("station_profile",MODE_PRIVATE);
-        String st=sp.getString("station",""), in=sp.getString("interlocking",""), re=sp.getString("relay",""), pa=sp.getString("panel",""), pm=sp.getString("point_machine",""), de=sp.getString("detection",""), bl=sp.getString("block",""), ka=sp.getString("kavach",""), ot=sp.getString("other","");
+        String st=sp.getString("station",""), in=sp.getString("interlocking",""), ei=sp.getString("ei_make",""), re=sp.getString("relay",""), rn=sp.getString("relay_nomenclature",""), ra=sp.getString("rack",""), pa=sp.getString("panel",""), pm=sp.getString("point_machine",""), si=sp.getString("signal",""), de=sp.getString("detection",""), bl=sp.getString("block",""), ka=sp.getString("kavach",""), po=sp.getString("power",""), ou=sp.getString("outdoor",""), ot=sp.getString("other","");
         if(st.isEmpty() && in.isEmpty() && re.isEmpty()) return "STATION PROFILE: Not configured. Complete the profile before installation-specific diagnosis.\n\n";
-        return "ACTIVE STATION PROFILE\nStation: "+st+"\nInterlocking: "+in+"\nRelay: "+re+"\nPanel/VDU: "+pa+"\nPoint Machine: "+pm+"\nDetection: "+de+"\nBlock System: "+bl+"\nKAVACH: "+ka+"\nOther: "+ot+"\n\n";
+        return "ACTIVE STATION PROFILE\nStation: "+st+"\nInterlocking: "+in+"\nEI/Interlocking Make: "+ei+"\nRelay Family: "+re+"\nRelay Nomenclature: "+rn+"\nRack/Shelf: "+ra+"\nPanel/VDU: "+pa+"\nPoint Machine: "+pm+"\nSignal Type: "+si+"\nDetection: "+de+"\nBlock System: "+bl+"\nKAVACH: "+ka+"\nPower: "+po+"\nOutdoor: "+ou+"\nOther: "+ot+"\n\n";
     }
 
     void startFaultDiagnosis() {
@@ -431,15 +498,29 @@ public class SntDashboardActivity extends Activity {
     }
 
     void showTechnicalModule(String title,String message) {
+        LinearLayout box=new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
+        box.setPadding(dp(8),dp(4),dp(8),dp(4));
+
         ScrollView sv=new ScrollView(this);
         TextView t=text(message,14,false);
         t.setTextColor(Color.rgb(45,55,68));
         t.setPadding(dp(8),dp(8),dp(8),dp(8));
         sv.addView(t);
 
+        box.addView(sv,new LinearLayout.LayoutParams(-1,0,1));
+
+        TextView footer=text(
+            "DEVELOPED BY PRATIK MUKHERJEE (SIM/ASN/ER)",
+            10,true);
+        footer.setGravity(Gravity.CENTER);
+        footer.setTextColor(Color.rgb(15,72,105));
+        footer.setPadding(0,dp(10),0,dp(4));
+        box.addView(footer);
+
         new AlertDialog.Builder(this)
             .setTitle(title)
-            .setView(sv)
+            .setView(box)
             .setPositiveButton("CLOSE",null)
             .show();
     }
