@@ -182,18 +182,94 @@ public class SntDashboardActivity extends Activity {
 
     void showModule(String title,String description) {
 
+        if ("SIGNAL & POINT".equals(title)) {
+            showTechnicalModule(
+                "SIGNAL & POINT",
+                "POINT OPERATION & DETECTION\n\n" +
+                "1. OPERATOR COMMAND\n" +
+                "Normal/Reverse command is initiated from the approved panel/VDU/control system.\n\n" +
+                "2. INTERLOCKING CHECK\n" +
+                "The interlocking must permit the point operation. Existing route/track/crank-handle/other locking conditions are proved according to the approved circuit.\n\n" +
+                "3. CONTROL CIRCUIT\n" +
+                "The appropriate point control output operates the point-control/contactor circuit.\n\n" +
+                "4. POINT MACHINE\n" +
+                "The point machine moves the switch rails towards the commanded position.\n\n" +
+                "5. DETECTION\n" +
+                "After the point reaches the required position, the corresponding detection is obtained.\n\n" +
+                "6. RELAY-ROOM PROVING\n" +
+                "Typical relay-based schemes use NWKR for Normal detection and RWKR for Reverse detection. Exact circuit implementation must be checked against the station's approved drawing.\n\n" +
+                "7. CORRESPONDENCE\n" +
+                "The indication should correspond to the actual point position. A mismatch or flashing/out-of-correspondence indication must be treated as a fault condition until properly verified.\n\n" +
+                "FAULT FINDER — POINT NOT GOING REVERSE\n\n" +
+                "Panel/VDU → command indication → control relay/output → location-box/control supply → point machine operation → detection at site → RWKR indication → correspondence/proving.\n\n" +
+                "CHECK IN THIS ORDER\n" +
+                "• What exactly does the panel show?\n" +
+                "• Is the point currently Normal or Reverse?\n" +
+                "• Is the point free from route/track/crank-handle locking?\n" +
+                "• Is the Reverse control command reaching the approved control circuit?\n" +
+                "• Is the location-box supply healthy?\n" +
+                "• Does the machine actually operate?\n" +
+                "• Is Reverse detection obtained at site?\n" +
+                "• Is RWKR picking up in the relay room?\n" +
+                "• Does the indication correspond with the physical point position?\n\n" +
+                "IMPORTANT: Never bypass, bridge or alter a safety circuit merely to restore indication. Follow the approved station circuit, Railway instructions and authorised disconnection/reconnection procedure."
+            );
+            return;
+        }
+
+        if ("RELAY & CIRCUITS".equals(title)) {
+            showTechnicalModule(
+                "RELAY & CIRCUITS",
+                "RELAY BASICS\n\n" +
+                "PICKED / ENERGISED = relay coil is energised and its contacts are in the corresponding picked condition.\n\n" +
+                "DROPPED / DE-ENERGISED = relay coil is not energised and its contacts are in the corresponding dropped condition.\n\n" +
+                "FRONT CONTACT = contact which is closed in the relay's picked condition.\n\n" +
+                "BACK CONTACT = contact which is closed in the relay's dropped condition.\n\n" +
+                "COMMON FIELD METHOD\n" +
+                "Do not start by randomly checking relays. Start from the observed symptom and trace the approved circuit from source → controlling condition → relay coil → contact → next stage.\n\n" +
+                "POINT-RELATED RELAYS\n\n" +
+                "WLR — Point electrically-locking function in typical relay-interlocking schemes. Its exact energisation/drop sequence is circuit dependent.\n\n" +
+                "NWKR — Normal point indication relay in typical schemes. It proves Normal detection when the relevant conditions are satisfied.\n\n" +
+                "RWKR — Reverse point indication relay in typical schemes. It proves Reverse detection when the relevant conditions are satisfied.\n\n" +
+                "WNKR / WRKR — Point-location detection relays used in typical relay schemes to convey Normal/Reverse detection from the point location.\n\n" +
+                "WNR / WRR — Point-control relay designations found in relay-interlocking schemes; exact function and circuit position must be verified from the approved circuit for that installation.\n\n" +
+                "SIGNAL / ROUTE RELAY LOGIC\n\n" +
+                "A signal is not cleared merely because the signal command exists. Route conditions, point position, track conditions, locking and other interlocking conditions are proved according to the approved control table/circuit.\n\n" +
+                "HPR / DPR / ECR\n\n" +
+                "These abbreviations must NOT be assigned a universal function from the letters alone. Different signalling schemes/manufacturer drawings can use relay designations differently. The app will therefore require the approved circuit/drawing before giving a safety-critical interpretation.\n\n" +
+                "RELAY FAULT TRACING\n\n" +
+                "1. Identify the failed function.\n" +
+                "2. Identify the expected relay state from the approved circuit.\n" +
+                "3. Check whether the coil is receiving the required authorised feed.\n" +
+                "4. If the coil is healthy, trace the relevant contact onward.\n" +
+                "5. Check the next relay/input/output condition.\n" +
+                "6. Compare indoor indication with field condition.\n" +
+                "7. Record the actual measurement and relay state before changing anything.\n\n" +
+                "SAFETY RULE\n" +
+                "A relay abbreviation, colour, voltage or contact number shown here is reference information only. The station-specific approved circuit and authorised Railway procedure always take precedence."
+            );
+            return;
+        }
+
         String warning =
-            "\n\nFIELD SAFETY NOTE\n" +
-            "This is a reference and decision-support tool. " +
-            "For safety-critical work always follow the approved " +
-            "station-specific circuit, Railway instructions, " +
-            "RDSO/CAMTECH guidance and the equipment manufacturer's " +
-            "approved manual. Do not act on an uncertain circuit.";
+            description +
+            "\\n\\nFIELD SAFETY NOTE\\n" +
+            "This is a reference and decision-support tool. For safety-critical work always follow the approved station-specific circuit, Railway instructions, RDSO/CAMTECH guidance and the equipment manufacturer's approved manual.";
+
+        showTechnicalModule(title, warning);
+    }
+
+    void showTechnicalModule(String title,String message) {
+        ScrollView sv=new ScrollView(this);
+        TextView t=text(message,14,false);
+        t.setTextColor(Color.rgb(45,55,68));
+        t.setPadding(dp(8),dp(8),dp(8),dp(8));
+        sv.addView(t);
 
         new AlertDialog.Builder(this)
             .setTitle(title)
-            .setMessage(description + warning)
-            .setPositiveButton("OK",null)
+            .setView(sv)
+            .setPositiveButton("CLOSE",null)
             .show();
     }
 }
