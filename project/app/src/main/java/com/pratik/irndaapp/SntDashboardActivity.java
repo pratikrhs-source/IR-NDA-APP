@@ -182,6 +182,20 @@ public class SntDashboardActivity extends Activity {
 
     void showModule(String title,String description) {
 
+        if ("RRI / PANEL".equals(title)) {
+            showTechnicalModule("RRI / PANEL",
+                "RRI / PANEL FIELD GUIDE\n\n" +
+                "PANEL → RELAY ROOM → FIELD CORRESPONDENCE\n\n" +
+                "1. PANEL INDICATION\nRecord the exact signal, point, track, route or crank-handle indication before troubleshooting.\n\n" +
+                "2. ROUTE SETTING\nRequired conditions, point positions, detection and locking must be proved before the relevant signal can clear. Exact logic is installation-specific.\n\n" +
+                "3. ROUTE LOCKING\nOnce established, the route remains protected until the authorised release conditions are satisfied.\n\n" +
+                "4. APPROACH LOCKING\nApproach locking protects against unsafe route alteration after the relevant approach condition is established. Exact release logic must be checked from the approved circuit.\n\n" +
+                "5. FAULT FINDER — SIGNAL NOT CLEARING\nCheck: track indications → point positions → point detection → conflicting route/signal conditions → route locking → approach locking → relay-room correspondence → first missing condition in the approved circuit.\n\n" +
+                "6. WHAT CIRCUIT SHOULD I UPLOAD?\nFor detailed diagnosis upload the approved Control Table/Route Chart, Signal Control Circuit, Point Control & Detection Circuit and Route/Approach Locking Circuit. A relay-room shelf/rack drawing may also be required.\n\n" +
+                "SAFETY\nNever bypass or bridge an interlocking/safety circuit to restore an indication. Follow the approved station circuit, control table, SEM/Railway instructions and authorised maintenance procedure.");
+            return;
+        }
+
         if ("SIGNAL & POINT".equals(title)) {
             showTechnicalModule(
                 "SIGNAL & POINT",
