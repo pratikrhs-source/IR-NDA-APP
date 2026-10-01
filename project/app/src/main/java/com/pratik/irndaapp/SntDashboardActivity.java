@@ -27,6 +27,9 @@ public class SntDashboardActivity extends Activity {
         {"RELAY & CIRCUITS",
          "HPR, DPR, ECR, WNR, WRR, NWKR, RWKR and associated relay logic. Verify all safety-critical wiring against the approved circuit."},
 
+        {"RELAY & EQUIPMENT LIBRARY",
+         "Searchable verified library of relays and signalling equipment: function, application, system, make/model, relay style, front/back contacts, coil voltage, coil resistance, pick-up/drop-away data, working values, socket/base, maintenance checks and official source/page reference."},
+
         {"RRI / PANEL",
          "Panel indications, route setting, relay-room correspondence, route/section locking and common failure analysis."},
 
@@ -167,6 +170,10 @@ public class SntDashboardActivity extends Activity {
         ScrollView scroll = new ScrollView(this);
         list = new LinearLayout(this);
         list.setOrientation(LinearLayout.VERTICAL);
+        TextView section = text("S&T KNOWLEDGE & FIELD TOOLS",13,true);
+        section.setTextColor(Color.rgb(15,72,105));
+        section.setPadding(dp(4),dp(8),dp(4),dp(4));
+        list.addView(section);
         scroll.addView(list);
 
         LinearLayout.LayoutParams scrollLp =
@@ -207,8 +214,8 @@ public class SntDashboardActivity extends Activity {
 
             LinearLayout card = new LinearLayout(this);
             card.setOrientation(LinearLayout.VERTICAL);
-            card.setPadding(dp(6),dp(7),dp(6),dp(7));
-            card.setBackground(cardBackground());
+            card.setPadding(dp(8),dp(9),dp(8),dp(9));
+            card.setBackground(cardBackground()); card.setElevation(dp(4));
 
             LinearLayout row = new LinearLayout(this);
             row.setOrientation(LinearLayout.HORIZONTAL);
@@ -242,7 +249,7 @@ public class SntDashboardActivity extends Activity {
 
             LinearLayout.LayoutParams lp =
                 new LinearLayout.LayoutParams(-1,-2);
-            lp.setMargins(0,dp(6),0,dp(6));
+            lp.setMargins(0,dp(7),0,dp(7));
 
             list.addView(card,lp);
 
@@ -250,7 +257,238 @@ public class SntDashboardActivity extends Activity {
         }
     }
 
-    void showStationProfile() {
+    void showRelayLibrary() {
+    final String[][] relays = {
+        {"WKR1", "Point Detection Relay", "RRI", "Siemens", "Point detection / correspondence"},
+        {"K-50", "Point Circuit / Control Relay", "RRI", "Siemens", "Point control circuit"},
+        {"QN1", "Plug-in Signalling Relay", "TCAS / KAVACH", "Verify make/model", "Interface application"},
+        {"QNA1", "Plug-in Signalling Relay", "TCAS / KAVACH", "Verify make/model", "Interface application"},
+        {"NWKR", "Normal Detection Relay", "Point Detection", "Station-specific", "Normal position detection"},
+        {"RWKR", "Reverse Detection Relay", "Point Detection", "Station-specific", "Reverse position detection"},
+        {"WNR", "Relay Designation", "Relay Interlocking", "Station-specific", "Function must be verified from approved circuit"},
+        {"WRR", "Relay Designation", "Relay Interlocking", "Station-specific", "Function must be verified from approved circuit"},
+        {"HPR", "Relay Designation", "RRI / Relay Logic", "Station-specific", "Function must be verified from approved circuit"},
+        {"DPR", "Relay Designation", "RRI / Relay Logic", "Station-specific", "Function must be verified from approved circuit"},
+        {"ECR", "Relay Designation", "RRI / Relay Logic", "Station-specific", "Function must be verified from approved circuit"}
+    };
+
+    LinearLayout root = new LinearLayout(this);
+    root.setOrientation(LinearLayout.VERTICAL);
+    root.setPadding(20, 18, 20, 20);
+    root.setBackgroundColor(Color.rgb(245, 247, 250));
+
+    TextView title = new TextView(this);
+    title.setText("RELAY & EQUIPMENT LIBRARY");
+    title.setTextSize(22);
+    title.setTextColor(Color.rgb(20, 45, 80));
+    title.setTypeface(null, android.graphics.Typeface.BOLD);
+    root.addView(title);
+
+    TextView subtitle = new TextView(this);
+    subtitle.setText("Search by designation, function, system or make/model.");
+    subtitle.setTextSize(13);
+    subtitle.setTextColor(Color.DKGRAY);
+    subtitle.setPadding(0, 6, 0, 12);
+    root.addView(subtitle);
+
+    EditText search = new EditText(this);
+    search.setHint("Search relay / function / system...");
+    search.setSingleLine(true);
+    root.addView(search);
+
+    ScrollView scroll = new ScrollView(this);
+    LinearLayout list = new LinearLayout(this);
+    list.setOrientation(LinearLayout.VERTICAL);
+    list.setPadding(0, 12, 0, 12);
+    scroll.addView(list);
+    root.addView(scroll, new LinearLayout.LayoutParams(
+        LinearLayout.LayoutParams.MATCH_PARENT, 0, 1));
+
+    TextView footer = new TextView(this);
+    footer.setText("DEVELOPED BY PRATIK MUKHERJEE (SIM/ASN/ER)");
+    footer.setTextSize(12);
+    footer.setTextColor(Color.rgb(20, 45, 80));
+    footer.setGravity(Gravity.CENTER);
+    footer.setPadding(0, 12, 0, 4);
+    root.addView(footer);
+
+    final Runnable[] render = new Runnable[1];
+
+    render[0] = new Runnable() {
+        public void run() {
+            String q = search.getText().toString().trim().toLowerCase();
+            list.removeAllViews();
+
+            int count = 0;
+
+            for (String[] r : relays) {
+                String searchable =
+                    r[0] + " " + r[1] + " " + r[2] + " " + r[3] + " " + r[4];
+
+                if (q.length() > 0 &&
+                    !searchable.toLowerCase().contains(q)) {
+                    continue;
+                }
+
+                count++;
+
+                TextView card = new TextView(SntDashboardActivity.this);
+                card.setText(
+                    r[0] + "  •  " + r[1] +
+                    "\n" + r[2] + "  |  " + r[3] +
+                    "\n" + r[4]
+                );
+                card.setTextSize(14);
+                card.setTextColor(Color.rgb(35, 45, 58));
+                card.setPadding(18, 16, 18, 16);
+                card.setBackgroundColor(Color.WHITE);
+                card.setGravity(Gravity.CENTER_VERTICAL);
+
+                LinearLayout.LayoutParams lp =
+                    new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT);
+                lp.setMargins(0, 0, 0, 10);
+                list.addView(card, lp);
+
+                final String designation = r[0];
+                final String function = r[1];
+                final String system = r[2];
+                final String make = r[3];
+                final String application = r[4];
+
+                card.setOnClickListener(v ->
+                    showRelayDetail(
+                        designation,
+                        function,
+                        system,
+                        make,
+                        application));
+            }
+
+            if (count == 0) {
+                TextView empty = new TextView(SntDashboardActivity.this);
+                empty.setText("No matching relay/equipment found.");
+                empty.setTextSize(14);
+                empty.setTextColor(Color.DKGRAY);
+                empty.setPadding(12, 24, 12, 24);
+                list.addView(empty);
+            }
+        }
+    };
+
+    search.addTextChangedListener(new android.text.TextWatcher() {
+        public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+        public void onTextChanged(CharSequence s, int start, int before, int count) {
+            render[0].run();
+        }
+        public void afterTextChanged(android.text.Editable s) {}
+    });
+
+    render[0].run();
+    setContentView(root);
+}
+
+void showRelayDetail(
+        String designation,
+        String function,
+        String system,
+        String make,
+        String application) {
+
+    LinearLayout root = new LinearLayout(this);
+    root.setOrientation(LinearLayout.VERTICAL);
+    root.setPadding(20, 18, 20, 20);
+    root.setBackgroundColor(Color.rgb(245, 247, 250));
+
+    TextView title = new TextView(this);
+    title.setText(designation);
+    title.setTextSize(24);
+    title.setTextColor(Color.rgb(20, 45, 80));
+    title.setTypeface(null, android.graphics.Typeface.BOLD);
+    root.addView(title);
+
+    TextView summary = new TextView(this);
+    summary.setText(
+        function +
+        "\n\nSystem: " + system +
+        "\nMake / Model: " + make +
+        "\nApplication: " + application
+    );
+    summary.setTextSize(15);
+    summary.setTextColor(Color.rgb(35, 45, 58));
+    summary.setPadding(8, 14, 8, 18);
+    root.addView(summary);
+
+    ScrollView scroll = new ScrollView(this);
+    LinearLayout details = new LinearLayout(this);
+    details.setOrientation(LinearLayout.VERTICAL);
+    details.setPadding(8, 4, 8, 20);
+    scroll.addView(details);
+
+    addRelayField(details, "Designation / Relay Type", designation);
+    addRelayField(details, "Function / Application", function);
+    addRelayField(details, "System / Interlocking Type", system);
+    addRelayField(details, "Make / Model / Version", make);
+    addRelayField(details, "Relay Style / Construction", "To be verified");
+    addRelayField(details, "Front Contacts", "To be verified");
+    addRelayField(details, "Back Contacts", "To be verified");
+    addRelayField(details, "Coil Voltage", "To be verified");
+    addRelayField(details, "Coil Resistance", "To be verified");
+    addRelayField(details, "Pick-up Voltage / Current", "To be verified");
+    addRelayField(details, "Drop-away Voltage / Current", "To be verified");
+    addRelayField(details, "Normal Working Voltage / Current", "To be verified");
+    addRelayField(details, "Contact Rating", "To be verified");
+    addRelayField(details, "Socket / Base / Coding", "To be verified");
+    addRelayField(details, "Dimensions / Physical Identification", "To be verified");
+    addRelayField(details, "Maintenance / Testing Notes", "To be verified");
+    addRelayField(details, "Official Source / Document / Page", "To be added after verification");
+    addRelayField(details, "Verification Status", "Pending official-source verification");
+
+    TextView safety = new TextView(this);
+    safety.setText(
+        "SAFETY NOTE\n\n" +
+        "Relay designation and function can be station/circuit specific. " +
+        "Do not infer a vital function from the relay abbreviation alone. " +
+        "Approved station circuit, control table, Railway instructions, " +
+        "RDSO/CAMTECH guidance and manufacturer documentation take precedence."
+    );
+    safety.setTextSize(13);
+    safety.setTextColor(Color.rgb(110, 50, 20));
+    safety.setPadding(12, 18, 12, 18);
+    details.addView(safety);
+
+    root.addView(scroll, new LinearLayout.LayoutParams(
+        LinearLayout.LayoutParams.MATCH_PARENT, 0, 1));
+
+    TextView footer = new TextView(this);
+    footer.setText("DEVELOPED BY PRATIK MUKHERJEE (SIM/ASN/ER)");
+    footer.setTextSize(12);
+    footer.setTextColor(Color.rgb(20, 45, 80));
+    footer.setGravity(Gravity.CENTER);
+    footer.setPadding(0, 10, 0, 4);
+    root.addView(footer);
+
+    setContentView(root);
+}
+
+void addRelayField(LinearLayout parent, String label, String value) {
+    TextView field = new TextView(this);
+    field.setText(label + "\n" + value);
+    field.setTextSize(14);
+    field.setTextColor(Color.rgb(35, 45, 58));
+    field.setPadding(14, 12, 14, 12);
+    field.setBackgroundColor(Color.WHITE);
+
+    LinearLayout.LayoutParams lp =
+        new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT);
+    lp.setMargins(0, 0, 0, 6);
+    parent.addView(field, lp);
+}
+
+void showStationProfile() {
         final String[] keys = {"station","interlocking","ei_make","relay","relay_nomenclature","rack","panel","point_machine","signal","detection","block","kavach","power","outdoor","other"};
         final String[] labels = {"Station Name / Code","Interlocking: PI / RRI / EI","Interlocking / EI Make, Model, Version","Relay Family / Siemens K-series","Station Relay Nomenclature / Designation","Relay Room Rack / Shelf Details","Panel / VDU Make and Type","Point Machine Make / Type","Signal / Lamp / LED Type","Track Detection / MSDAC / Track Circuit","BPAC / HASSDAC / UFSBI / Block System","KAVACH / TCAS Make and Version","Signalling Power Supply Arrangement","Outdoor Equipment / Location Box Details","Other Indoor / Outdoor Equipment"};
         final android.content.SharedPreferences sp = getSharedPreferences("station_profile", MODE_PRIVATE);
@@ -391,6 +629,10 @@ public class SntDashboardActivity extends Activity {
 
         }
 
+        if ("RELAY & EQUIPMENT LIBRARY".equals(title)) {
+            showRelayLibrary();
+            return;
+        }
         if ("ELECTRONIC INTERLOCKING".equals(title)) {
             showTechnicalModule("ELECTRONIC INTERLOCKING",
                 "ELECTRONIC INTERLOCKING — FIELD GUIDE\n\n" +
