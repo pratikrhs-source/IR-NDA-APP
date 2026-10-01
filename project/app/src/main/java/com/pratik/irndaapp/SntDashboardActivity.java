@@ -182,6 +182,21 @@ public class SntDashboardActivity extends Activity {
 
     void showModule(String title,String description) {
 
+        if ("ELECTRONIC INTERLOCKING".equals(title)) {
+            showTechnicalModule("ELECTRONIC INTERLOCKING",
+                "ELECTRONIC INTERLOCKING — FIELD GUIDE\n\n" +
+                "1. BASIC ARCHITECTURE\nEI uses application logic to establish interlocking conditions and interfaces with field equipment. A typical architecture contains vital logic, vital inputs/outputs, non-vital indications/alarms and diagnostic facilities. Exact architecture depends on the approved manufacturer and system version.\n\n" +
+                "2. VITAL FUNCTIONS\nVital functions include safety-critical proving and control such as signal and point control. Safety-related application logic must be treated according to the approved EI design and application data.\n\n" +
+                "3. NON-VITAL FUNCTIONS\nLocal indications, alarms, diagnostic information and certain external interfaces may be non-vital. Never assume that an indication is vital or non-vital without checking the approved system documentation.\n\n" +
+                "4. FIELD INTERFACES\nTypical interfaces may include signal outputs, point-control interfaces, track-related inputs, detection inputs, level-crossing interfaces and communication with other signalling equipment. The actual interface arrangement is manufacturer/model specific.\n\n" +
+                "5. DIAGNOSTICS\nWhen an EI failure occurs, first record the exact alarm, diagnostic code, affected equipment/function and time. Do not reset repeatedly without recording the evidence.\n\n" +
+                "6. FAULT FINDER\nEI function failed → record diagnostic/alarm → identify affected signal/point/track → check corresponding field indication → check approved input/output/interface → check communication/power condition → compare redundant/system status where applicable → identify the first abnormal condition.\n\n" +
+                "7. TESTING\nFunctional testing verifies application logic and correspondence with actual connected equipment. FAT and SAT are part of the approved EI testing process. Testing must follow the authorised test procedure and approved control/selection table.\n\n" +
+                "8. WHAT SHOULD I UPLOAD?\nFor detailed diagnosis upload the EI make/model/version, exact diagnostic screen or alarm, relevant approved interface/application document, control table and—where applicable—the field circuit or equipment drawing.\n\n" +
+                "SAFETY\nNever bypass a vital function, force an output or repeatedly reset an EI to clear a fault without following the authorised procedure. The approved EI manual, application data, Railway instructions and manufacturer documentation take precedence over this reference guide.");
+            return;
+        }
+
         if ("RRI / PANEL".equals(title)) {
             showTechnicalModule("RRI / PANEL",
                 "RRI / PANEL FIELD GUIDE\n\n" +
