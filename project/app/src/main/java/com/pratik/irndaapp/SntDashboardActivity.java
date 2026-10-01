@@ -386,6 +386,175 @@ public class SntDashboardActivity extends Activity {
     });
 
     render[0].run();
+    Button forecastButton = new Button(this);
+    forecastButton.setText("PREDICTIVE MAINTENANCE / AI FORECAST");
+    forecastButton.setTextSize(13);
+    forecastButton.setOnClickListener(v -> showPredictiveMaintenance());
+
+    root.addView(forecastButton, new LinearLayout.LayoutParams(
+        LinearLayout.LayoutParams.MATCH_PARENT,
+        LinearLayout.LayoutParams.WRAP_CONTENT));
+
+    setContentView(root);
+}
+
+void showPredictiveMaintenance() {
+    LinearLayout root = new LinearLayout(this);
+    root.setOrientation(LinearLayout.VERTICAL);
+    root.setPadding(20, 18, 20, 20);
+    root.setBackgroundColor(Color.rgb(245, 247, 250));
+
+    TextView title = new TextView(this);
+    title.setText("PREDICTIVE MAINTENANCE / AI FORECAST");
+    title.setTextSize(21);
+    title.setTextColor(Color.rgb(20, 45, 80));
+    title.setTypeface(null, android.graphics.Typeface.BOLD);
+    root.addView(title);
+
+    TextView intro = new TextView(this);
+    intro.setText("Enter observed equipment and maintenance information for a structured risk assessment.");
+    intro.setTextSize(13);
+    intro.setTextColor(Color.DKGRAY);
+    intro.setPadding(0, 8, 0, 14);
+    root.addView(intro);
+
+    ScrollView scroll = new ScrollView(this);
+    LinearLayout form = new LinearLayout(this);
+    form.setOrientation(LinearLayout.VERTICAL);
+    form.setPadding(4, 4, 4, 12);
+    scroll.addView(form);
+
+    EditText equipment = new EditText(this);
+    equipment.setHint("Equipment / relay / system");
+    equipment.setSingleLine(true);
+    form.addView(equipment);
+
+    EditText faultCount = new EditText(this);
+    faultCount.setHint("Fault occurrences in recent period");
+    faultCount.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);
+    faultCount.setSingleLine(true);
+    form.addView(faultCount);
+
+    EditText symptom = new EditText(this);
+    symptom.setHint("Repeated / intermittent symptom");
+    symptom.setSingleLine(false);
+    form.addView(symptom);
+
+    EditText measurement = new EditText(this);
+    measurement.setHint("Observed measurement / test result");
+    measurement.setSingleLine(false);
+    form.addView(measurement);
+
+    EditText maintenance = new EditText(this);
+    maintenance.setHint("Last maintenance / inspection observation");
+    maintenance.setSingleLine(false);
+    form.addView(maintenance);
+
+    EditText history = new EditText(this);
+    history.setHint("Previous fault history / remarks");
+    history.setSingleLine(false);
+    form.addView(history);
+
+    Button analyse = new Button(this);
+    analyse.setText("ANALYSE FAILURE RISK");
+    form.addView(analyse);
+
+    TextView result = new TextView(this);
+    result.setTextSize(14);
+    result.setTextColor(Color.rgb(35, 45, 58));
+    result.setPadding(12, 18, 12, 18);
+    form.addView(result);
+
+    analyse.setOnClickListener(v -> {
+        String eq = equipment.getText().toString().trim();
+        String fc = faultCount.getText().toString().trim();
+        String sym = symptom.getText().toString().trim();
+        String meas = measurement.getText().toString().trim();
+        String maint = maintenance.getText().toString().trim();
+        String hist = history.getText().toString().trim();
+
+        if (eq.length() == 0) {
+            result.setText("Enter the equipment / relay / system name first.");
+            return;
+        }
+
+        int faults = 0;
+        try {
+            if (fc.length() > 0) {
+                faults = Integer.parseInt(fc);
+            }
+        } catch (Exception ignored) {
+            faults = 0;
+        }
+
+        StringBuilder out = new StringBuilder();
+
+        out.append("FAILURE FORECAST\n\n");
+        out.append("Equipment: ").append(eq).append("\n\n");
+
+        if (faults >= 3) {
+            out.append("Risk indicator: RECURRENT FAULT PATTERN DETECTED\n");
+        } else if (faults > 0) {
+            out.append("Risk indicator: FAULT HISTORY PRESENT\n");
+        } else {
+            out.append("Risk indicator: INSUFFICIENT FAULT HISTORY\n");
+        }
+
+        if (sym.length() > 0) {
+            out.append("\nObserved symptom:\n");
+            out.append(sym).append("\n");
+        }
+
+        if (meas.length() > 0) {
+            out.append("\nMeasurement evidence:\n");
+            out.append(meas).append("\n");
+            out.append("Compare the observed value with the applicable approved specification.\n");
+        }
+
+        out.append("\nRECOMMENDED CHECKING PATH\n");
+        out.append("1. Confirm exact station and system configuration.\n");
+        out.append("2. Check present indication, alarm and event history.\n");
+        out.append("3. Compare with previous fault records.\n");
+        out.append("4. Check the approved indoor circuit or interface.\n");
+        out.append("5. Check location-box and field interface where applicable.\n");
+        out.append("6. Verify outdoor equipment and correspondence.\n");
+        out.append("7. Record measured values against the approved specification.\n");
+        out.append("8. Perform only authorised corrective maintenance.\n");
+
+        if (maint.length() > 0 || hist.length() > 0) {
+            out.append("\nHISTORICAL INFORMATION CAPTURED\n");
+            out.append("Maintenance observations and previous fault history have been recorded for future trend analysis.\n");
+        }
+
+        out.append("\nCORRECTIVE / PREVENTIVE ACTION\n");
+        out.append("Verify the actual failure evidence before replacing a component. ");
+        out.append("For recurring faults, record the event, measured values, equipment state and corrective action ");
+        out.append("so future trend analysis can identify developing patterns.\n");
+
+        out.append("\nAI FORECAST STATUS\n");
+        out.append("This version provides rule-based decision support. ");
+        out.append("A future AI model can analyse accumulated station history and measurement trends. ");
+        out.append("No exact future failure date is predicted without sufficient verified historical data.\n");
+
+        out.append("\nSAFETY\n");
+        out.append("Do not bypass, bridge, short, force or defeat any vital circuit or safety function. ");
+        out.append("Follow the approved station circuit, control table, Railway instructions, ");
+        out.append("RDSO/CAMTECH guidance and manufacturer documentation.");
+
+        result.setText(out.toString());
+    });
+
+    root.addView(scroll, new LinearLayout.LayoutParams(
+        LinearLayout.LayoutParams.MATCH_PARENT, 0, 1));
+
+    TextView footer = new TextView(this);
+    footer.setText("DEVELOPED BY PRATIK MUKHERJEE (SIM/ASN/ER)");
+    footer.setTextSize(12);
+    footer.setTextColor(Color.rgb(20, 45, 80));
+    footer.setGravity(Gravity.CENTER);
+    footer.setPadding(0, 10, 0, 4);
+    root.addView(footer);
+
     setContentView(root);
 }
 
