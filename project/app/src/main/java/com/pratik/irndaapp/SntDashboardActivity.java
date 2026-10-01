@@ -694,7 +694,282 @@ void showStationProfile() {
         return "ACTIVE STATION PROFILE\nStation: "+st+"\nInterlocking: "+in+"\nEI/Interlocking Make: "+ei+"\nRelay Family: "+re+"\nRelay Nomenclature: "+rn+"\nRack/Shelf: "+ra+"\nPanel/VDU: "+pa+"\nPoint Machine: "+pm+"\nSignal Type: "+si+"\nDetection: "+de+"\nBlock System: "+bl+"\nKAVACH: "+ka+"\nPower: "+po+"\nOutdoor: "+ou+"\nOther: "+ot+"\n\n";
     }
 
-    void startFaultDiagnosis() {
+    void showStationAwareFaultFinder() {
+    LinearLayout root = new LinearLayout(this);
+    root.setOrientation(LinearLayout.VERTICAL);
+    root.setPadding(20, 18, 20, 20);
+    root.setBackgroundColor(Color.rgb(245, 247, 250));
+
+    TextView title = new TextView(this);
+    title.setText("STATION-AWARE FAULT FINDER");
+    title.setTextSize(21);
+    title.setTextColor(Color.rgb(20, 45, 80));
+    title.setTypeface(null, android.graphics.Typeface.BOLD);
+    root.addView(title);
+
+    TextView info = new TextView(this);
+    info.setText("First identify the station configuration. Diagnosis will then use the selected system context.");
+    info.setTextSize(13);
+    info.setTextColor(Color.DKGRAY);
+    info.setPadding(0, 7, 0, 12);
+    root.addView(info);
+
+    ScrollView scroll = new ScrollView(this);
+    LinearLayout form = new LinearLayout(this);
+    form.setOrientation(LinearLayout.VERTICAL);
+    form.setPadding(4, 4, 4, 16);
+    scroll.addView(form);
+
+    TextView stationLabel = new TextView(this);
+    stationLabel.setText("STATION / LOCATION");
+    stationLabel.setTextSize(13);
+    stationLabel.setTextColor(Color.rgb(20, 45, 80));
+    form.addView(stationLabel);
+
+    EditText station = new EditText(this);
+    station.setHint("Station name / code");
+    station.setSingleLine(true);
+    form.addView(station);
+
+    TextView interlockingLabel = new TextView(this);
+    interlockingLabel.setText("INTERLOCKING TYPE");
+    interlockingLabel.setTextSize(13);
+    interlockingLabel.setTextColor(Color.rgb(20, 45, 80));
+    form.addView(interlockingLabel);
+
+    Spinner interlocking = new Spinner(this);
+    String[] interlockingOptions = {
+        "PI - Panel Interlocking",
+        "RRI - Route Relay Interlocking",
+        "EI - Electronic Interlocking",
+        "Not Known / Need Verification"
+    };
+    interlocking.setAdapter(new ArrayAdapter<String>(
+        this,
+        android.R.layout.simple_spinner_dropdown_item,
+        interlockingOptions
+    ));
+    form.addView(interlocking);
+
+    TextView relayLabel = new TextView(this);
+    relayLabel.setText("RELAY / INTERFACE FAMILY");
+    relayLabel.setTextSize(13);
+    relayLabel.setTextColor(Color.rgb(20, 45, 80));
+    form.addView(relayLabel);
+
+    Spinner relay = new Spinner(this);
+    String[] relayOptions = {
+        "Siemens K-Series / K50",
+        "WKR / NWKR / RWKR",
+        "QN / QNA",
+        "Other relay family",
+        "No relay information available"
+    };
+    relay.setAdapter(new ArrayAdapter<String>(
+        this,
+        android.R.layout.simple_spinner_dropdown_item,
+        relayOptions
+    ));
+    form.addView(relay);
+
+    TextView areaLabel = new TextView(this);
+    areaLabel.setText("FAULT AREA");
+    areaLabel.setTextSize(13);
+    areaLabel.setTextColor(Color.rgb(20, 45, 80));
+    form.addView(areaLabel);
+
+    Spinner area = new Spinner(this);
+    String[] areaOptions = {
+        "Indoor / Relay Room",
+        "EI / Equipment Room",
+        "Outdoor / Location Box / Field",
+        "Both Indoor and Outdoor",
+        "Not Known"
+    };
+    area.setAdapter(new ArrayAdapter<String>(
+        this,
+        android.R.layout.simple_spinner_dropdown_item,
+        areaOptions
+    ));
+    form.addView(area);
+
+    TextView faultLabel = new TextView(this);
+    faultLabel.setText("FAULT TYPE");
+    faultLabel.setTextSize(13);
+    faultLabel.setTextColor(Color.rgb(20, 45, 80));
+    form.addView(faultLabel);
+
+    Spinner fault = new Spinner(this);
+    String[] faultOptions = {
+        "Signal not clearing",
+        "Point not moving / detection fault",
+        "Track circuit / axle counter fault",
+        "EI / interlocking fault",
+        "BPAC / HASSDAC / UFSBI fault",
+        "KAVACH / TCAS fault",
+        "Other S&T fault"
+    };
+    fault.setAdapter(new ArrayAdapter<String>(
+        this,
+        android.R.layout.simple_spinner_dropdown_item,
+        faultOptions
+    ));
+    form.addView(fault);
+
+    EditText symptom = new EditText(this);
+    symptom.setHint("Exact indication / symptom / alarm / relay state");
+    symptom.setSingleLine(false);
+    form.addView(symptom);
+
+    EditText history = new EditText(this);
+    history.setHint("Previous occurrence / frequency / maintenance history");
+    history.setSingleLine(false);
+    form.addView(history);
+
+    Button analyse = new Button(this);
+    analyse.setText("START STATION-AWARE DIAGNOSIS");
+    form.addView(analyse);
+
+    TextView result = new TextView(this);
+    result.setTextSize(14);
+    result.setTextColor(Color.rgb(35, 45, 58));
+    result.setPadding(12, 18, 12, 18);
+    form.addView(result);
+
+    analyse.setOnClickListener(v -> {
+        String stn = station.getText().toString().trim();
+        String il = interlocking.getSelectedItem().toString();
+        String rl = relay.getSelectedItem().toString();
+        String ar = area.getSelectedItem().toString();
+        String ft = fault.getSelectedItem().toString();
+        String sy = symptom.getText().toString().trim();
+        String hi = history.getText().toString().trim();
+
+        if (stn.length() == 0) {
+            result.setText("Enter the station name / code first.");
+            return;
+        }
+
+        StringBuilder r = new StringBuilder();
+
+        r.append("STATION-AWARE FAULT ANALYSIS\n\n");
+        r.append("Station: ").append(stn).append("\n");
+        r.append("Interlocking: ").append(il).append("\n");
+        r.append("Relay / Interface: ").append(rl).append("\n");
+        r.append("Fault Area: ").append(ar).append("\n");
+        r.append("Fault Type: ").append(ft).append("\n");
+
+        if (sy.length() > 0) {
+            r.append("\nObserved indication:\n").append(sy).append("\n");
+        }
+
+        if (hi.length() > 0) {
+            r.append("\nPrevious history:\n").append(hi).append("\n");
+        }
+
+        r.append("\nDIAGNOSTIC PATH\n");
+
+        if (ft.startsWith("Signal")) {
+            r.append("1. Confirm signal indication and route status.\n");
+            r.append("2. Check route conditions and route locking.\n");
+            r.append("3. Check relevant track detection.\n");
+            r.append("4. Check point detection / correspondence.\n");
+            r.append("5. Trace approved signal control logic.\n");
+            r.append("6. Check relay / EI output and corresponding field interface.\n");
+            r.append("7. Compare relay-room indication with outdoor equipment.\n");
+        } else if (ft.startsWith("Point")) {
+            r.append("1. Confirm commanded position.\n");
+            r.append("2. Verify interlocking permission.\n");
+            r.append("3. Check point control output.\n");
+            r.append("4. Trace approved control circuit to location box.\n");
+            r.append("5. Check point machine supply and operation.\n");
+            r.append("6. Check detection and correspondence.\n");
+            r.append("7. Compare indoor indication with actual field position.\n");
+        } else if (ft.startsWith("Track")) {
+            r.append("1. Confirm affected section indication.\n");
+            r.append("2. Identify track circuit / axle counter equipment.\n");
+            r.append("3. Check evaluator / interface status.\n");
+            r.append("4. Check communication and event diagnostics.\n");
+            r.append("5. Verify field detection and correspondence.\n");
+            r.append("6. Follow only authorised reset procedure where applicable.\n");
+        } else if (ft.startsWith("EI")) {
+            r.append("1. Confirm EI make, model and version.\n");
+            r.append("2. Check diagnostic / alarm information.\n");
+            r.append("3. Identify affected function or I/O.\n");
+            r.append("4. Check approved interface and power/status indications.\n");
+            r.append("5. Check communication / event logs.\n");
+            r.append("6. Verify corresponding field equipment.\n");
+        } else if (ft.startsWith("BPAC")) {
+            r.append("1. Check both-end indications.\n");
+            r.append("2. Check block interface status.\n");
+            r.append("3. Check communication / equipment health.\n");
+            r.append("4. Check approved relay/interface path.\n");
+            r.append("5. Review event history.\n");
+            r.append("6. Follow authorised block reset / restoration procedure.\n");
+        } else if (ft.startsWith("KAVACH")) {
+            r.append("1. Confirm onboard / trackside context.\n");
+            r.append("2. Check equipment health and diagnostic indication.\n");
+            r.append("3. Check communication status.\n");
+            r.append("4. Check location / RFID related indication where applicable.\n");
+            r.append("5. Check signalling interface and event records.\n");
+            r.append("6. Verify trackside correspondence.\n");
+        } else {
+            r.append("1. Identify the exact failed function.\n");
+            r.append("2. Confirm the station-specific approved circuit/interface.\n");
+            r.append("3. Trace indoor-to-outdoor correspondence.\n");
+            r.append("4. Record measured values and equipment status.\n");
+        }
+
+        r.append("\nCONFIGURATION-AWARE CHECK\n");
+        if (il.contains("RRI") || il.contains("PI")) {
+            r.append("Relay/interlocking circuit tracing should use the approved station drawing.\n");
+        } else if (il.startsWith("EI")) {
+            r.append("Prioritise approved EI diagnostic information, I/O status and event logs.\n");
+        } else {
+            r.append("Interlocking type must be confirmed before making a system-specific conclusion.\n");
+        }
+
+        if (rl.contains("K-Series") || rl.contains("WKR")) {
+            r.append("Relay family information is available; exact relay designation and circuit function must still be verified from the approved drawing.\n");
+        } else if (rl.contains("No relay")) {
+            r.append("Relay information is unavailable; do not assume a relay type or function.\n");
+        }
+
+        r.append("\nFAILURE FORECAST\n");
+        if (hi.length() > 0 || sy.length() > 0) {
+            r.append("A recurring/intermittent pattern can be assessed from the recorded history and symptoms.\n");
+            r.append("Record every occurrence, measured value and corrective action for future trend analysis.\n");
+        } else {
+            r.append("Insufficient historical evidence for a meaningful failure forecast.\n");
+        }
+
+        r.append("\nCORRECTIVE MEASURE\n");
+        r.append("Verify the actual cause before replacing equipment. ");
+        r.append("Use approved testing and maintenance procedures and document the result.\n");
+
+        r.append("\nSAFETY\n");
+        r.append("Never bypass, bridge, short, force or defeat an interlocking or safety function. ");
+        r.append("Use the approved station circuit, control table, Railway instructions, ");
+        r.append("RDSO/CAMTECH guidance and manufacturer documentation.");
+
+        result.setText(r.toString());
+    });
+
+    root.addView(scroll, new LinearLayout.LayoutParams(
+        LinearLayout.LayoutParams.MATCH_PARENT, 0, 1));
+
+    TextView footer = new TextView(this);
+    footer.setText("DEVELOPED BY PRATIK MUKHERJEE (SIM/ASN/ER)");
+    footer.setTextSize(12);
+    footer.setTextColor(Color.rgb(20, 45, 80));
+    footer.setGravity(Gravity.CENTER);
+    footer.setPadding(0, 10, 0, 4);
+    root.addView(footer);
+
+    setContentView(root);
+}
+
+void startFaultDiagnosis() {
         android.content.SharedPreferences sp=getSharedPreferences("station_profile",MODE_PRIVATE);
         String station=sp.getString("station","");
         String interlocking=sp.getString("interlocking","");
@@ -792,7 +1067,7 @@ void showStationProfile() {
         }
 
         if ("FAULT FINDER".equals(title)) {
-            startFaultDiagnosis();
+            showStationAwareFaultFinder();
             return;
 
 
