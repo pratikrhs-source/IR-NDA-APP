@@ -1,1344 +1,699 @@
 package com.pratik.irndaapp;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.os.Bundle;
 import android.graphics.Color;
+import android.graphics.Canvas;
+import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.view.Gravity;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
+import android.content.Context;
 import android.widget.*;
-import android.text.Editable;
-import android.text.TextWatcher;
 import java.util.*;
 
 public class SntDashboardActivity extends Activity {
 
-    LinearLayout list;
-    EditText search;
+    private final int NAVY = Color.rgb(5, 31, 58);
+    private final int BLUE = Color.rgb(10, 91, 170);
+    private final int GOLD = Color.rgb(246, 184, 45);
+    private final int BG = Color.rgb(241, 245, 249);
+    private final int TEXT = Color.rgb(22, 35, 50);
+    private final int MUTED = Color.rgb(92, 108, 125);
+    private LinearLayout root;
+    private LinearLayout content;
+    private EditText search;
+    private TextView title;
+    private final ArrayList<Module> modules = new ArrayList<>();
 
-    final String[][] MODULES = {
-        {"SIGNALLING FUNDAMENTALS",
-         "Fail-safe principles, interlocking, route locking, approach locking, section locking, signals, points, tracks and block working."},
-
-        {"SIGNAL & POINT",
-         "Signal control and proving, point operation and detection, correspondence checks and structured fault isolation."},
-
-        {"RELAY & CIRCUITS",
-         "HPR, DPR, ECR, WNR, WRR, NWKR, RWKR and associated relay logic. Verify all safety-critical wiring against the approved circuit."},
-
-        {"RELAY & EQUIPMENT LIBRARY",
-         "Searchable verified library of relays and signalling equipment: function, application, system, make/model, relay style, front/back contacts, coil voltage, coil resistance, pick-up/drop-away data, working values, socket/base, maintenance checks and official source/page reference."},
-
-        {"RRI / PANEL",
-         "Panel indications, route setting, relay-room correspondence, route/section locking and common failure analysis."},
-
-        {"ELECTRONIC INTERLOCKING",
-         "Vital and non-vital architecture, input/output interfaces, diagnostics, redundancy, communication and maintenance concepts."},
-
-        {"KAVACH / TCAS",
-         "Train protection architecture, onboard and trackside equipment, RFID, radio communication, signal and authority interfaces."},
-
-        {"MSDAC",
-         "Axle detection, evaluator, field units, reset, indications, relay interfaces, communication, diagnostics and failure isolation."},
-
-        {"BPAC / HASSDAC",
-         "Block proving, axle detection, UFSBI interfaces, reset, indications, communication and maintenance concepts."},
-
-        {"UFSBI / BLOCK INSTRUMENTS",
-         "Block section equipment, communication, indications, operation and structured troubleshooting."},
-
-        {"MAINTAINER TOOLKIT",
-         "Multimeter, insulation tester, crimping, ferruling, soldering, relay handling, cable identification and restoration checklists."},
-
-        {"STATION PROFILE",
-         "Save station-specific PI/RRI/EI, relay family, equipment makes and indoor/outdoor configuration."},
-
-        {"FAULT FINDER",
-         "Profile-aware indoor and outdoor troubleshooting using station-specific system, relay and equipment information."},
-
-        {"MANUALS & SOURCES",
-         "Railway, RDSO, CAMTECH and manufacturer references with source and page information."},
-
-        {"AI ASSISTANT",
-         "Online assistance for complex questions, document research and image/circuit-based troubleshooting."},
-
-        {"JE / SSE MODE",
-         "Functional testing, correspondence testing, failure analysis, preventive maintenance, MTBF/MTTR and documentation."}
-    };
-
-    int dp(float x) {
-        return (int)(x * getResources().getDisplayMetrics().density + 0.5f);
-    }
-
-    GradientDrawable cardBackground() {
-        GradientDrawable g = new GradientDrawable();
-        g.setColor(Color.WHITE);
-        g.setCornerRadius(dp(18));
-        g.setStroke(dp(1), Color.rgb(220,226,233));
-        return g;
-    }
-
-    GradientDrawable headerBackground() {
-        GradientDrawable g = new GradientDrawable(
-            GradientDrawable.Orientation.TL_BR,
-            new int[]{Color.rgb(7,38,68),Color.rgb(18,91,126)});
-        g.setCornerRadius(dp(22));
-        return g;
-    }
-
-    int iconForModule(String title) {
-        if (title.contains("SIGNAL") || title.contains("POINT"))
-            return R.drawable.ic_signal_thumb;
-        if (title.contains("RELAY") || title.contains("CIRCUIT"))
-            return R.drawable.ic_relay_thumb;
-        if (title.contains("KAVACH") || title.contains("MSDAC") || title.contains("BPAC"))
-            return R.drawable.ic_equipment_thumb;
-        return R.drawable.ic_tools_thumb;
-    }
-
-    TextView text(String s, float size, boolean bold) {
-        TextView t = new TextView(this);
-        t.setText(s);
-        t.setTextSize(size);
-        t.setTextColor(Color.rgb(35,45,58));
-        t.setTypeface(Typeface.DEFAULT, bold ? Typeface.BOLD : Typeface.NORMAL);
-        t.setPadding(dp(14), dp(7), dp(14), dp(7));
-        return t;
+    static class Module {
+        String category, name, icon, desc;
+        Module(String c,String n,String i,String d){
+            category=c; name=n; icon=i; desc=d;
+        }
     }
 
     @Override
     protected void onCreate(Bundle b) {
         super.onCreate(b);
+        buildModules();
+        showHome();
+    }
 
-        LinearLayout root = new LinearLayout(this);
+    private void buildModules() {
+        if(!modules.isEmpty()) return;
+
+        add("SIGNALS & POINTS","Signalling Fundamentals","▣","Basic railway signalling principles, aspects, routes, interlocking and field practice.");
+        add("SIGNALS & POINTS","Signal & Point","⚙","Signals, aspects, point operation, detection, correspondence and troubleshooting.");
+        add("SIGNALS & POINTS","Point Machine","◆","Electric point machine, operation, detection, adjustment, locking and faults.");
+        add("SIGNALS & POINTS","Signal LED","●","LED signal units, aspects, lighting, checking and common failures.");
+
+        add("INTERLOCKING & RELAYS","Relay & Circuits","▤","Relay principles, contacts, WLR, NWKR/RWKR, route and signal circuits.");
+        add("INTERLOCKING & RELAYS","Relay & Equipment Library","▦","Reference for important signalling relays and equipment.");
+        add("INTERLOCKING & RELAYS","RRI / Panel","▥","Route setting, locking, panel indications and relay-room tracing.");
+        add("INTERLOCKING & RELAYS","Electronic Interlocking","▧","EI architecture, vital logic, field interfaces and diagnostics.");
+
+        add("TRACK & DETECTION","Track Circuit","═","Track feed, relay/evaluator, track leads, bonding and fault tracing.");
+        add("TRACK & DETECTION","Insulated Rail Joints","╫","Block joints, insulated joints, glued joints and insulation fault diagnosis.");
+        add("TRACK & DETECTION","MSDAC / Axle Counter","◎","Detection points, evaluator, section status, reset and diagnostics.");
+        add("TRACK & DETECTION","Signalling Cable","≋","Cable types, termination, insulation resistance, joints and fault tracing.");
+
+        add("BLOCK & AUTOMATIC","BPAC / HASSDAC","⇄","Block proving, axle counting, station interface and troubleshooting.");
+        add("BLOCK & AUTOMATIC","UFSBI / Block Instruments","⇆","Universal fail-safe block interface and conventional block equipment.");
+        add("BLOCK & AUTOMATIC","Automatic Signalling","→","Automatic block sections, signal sequence and field equipment.");
+        add("BLOCK & AUTOMATIC","Station Classification","⌂","Station/interlocking classes and signalling arrangements.");
+
+        add("LEVEL CROSSING","L/C Gate – ELB / MLB","⚠","Gate equipment, locking, approach/back locking and fault diagnosis.");
+        add("LEVEL CROSSING","Gate Communication & Warning","☎","Bell, buzzer, indication, communication and warning arrangements.");
+
+        add("POWER & SAFETY","IPS / Signalling Power","▣","IPS, charger, battery, DCDB/ACDB, inverter and power failure checks.");
+        add("POWER & SAFETY","Fire Alarm System","♢","Fire detection, alarm indication and signalling installation safety.");
+        add("POWER & SAFETY","Earthing & Surge Protection","⏚","Earthing, bonding, lightning and surge protection principles.");
+
+        add("MODERN SYSTEMS","KAVACH / TCAS","◉","Trackside, onboard, RFID, LEU, radio and fault-finding overview.");
+        add("MODERN SYSTEMS","Outdoor Equipment Library","⌘","Location boxes, junction boxes, signals, point equipment and field assets.");
+
+        add("FIELD TOOLS","Fault Finder","⌕","Structured fault diagnosis for signals, points, tracks, relays and systems.");
+        add("FIELD TOOLS","Station Profile","⌂","Save station-specific S&T configuration and equipment information.");
+        add("FIELD TOOLS","Maintainer Toolkit","⚒","Field checklists, measurements, maintenance records and quick references.");
+        add("FIELD TOOLS","Manuals & Sources","▤","RDSO/CAMTECH/manual reference section.");
+        add("FIELD TOOLS","JE / SSE Mode","★","Quick technical checklist and supervisory field reference.");
+    }
+
+    private void add(String c,String n,String i,String d){ modules.add(new Module(c,n,i,d)); }
+
+    private void showHome() {
+        root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(dp(16),dp(18),dp(16),dp(24));
-        root.setBackgroundColor(Color.rgb(245,247,250));
+        root.setBackgroundColor(BG);
 
         LinearLayout header = new LinearLayout(this);
-        header.setOrientation(LinearLayout.HORIZONTAL);
-        header.setGravity(Gravity.CENTER_VERTICAL);
-        header.setPadding(dp(18),dp(16),dp(18),dp(16));
-        header.setBackground(headerBackground());
+        header.setOrientation(LinearLayout.VERTICAL);
+        header.setPadding(dp(18),dp(14),dp(18),dp(16));
+        header.setBackground(round(NAVY,0,0,0,0,22));
 
-        ImageView headerIcon = new ImageView(this);
-        headerIcon.setImageResource(R.drawable.ic_signal_thumb);
-        headerIcon.setPadding(dp(4),dp(4),dp(4),dp(4));
-        header.addView(headerIcon,new LinearLayout.LayoutParams(dp(72),dp(72)));
+        LinearLayout top = new LinearLayout(this);
+        top.setGravity(Gravity.CENTER_VERTICAL);
 
-        LinearLayout headerText = new LinearLayout(this);
-        headerText.setOrientation(LinearLayout.VERTICAL);
+        SignalArtView art = new SignalArtView(this);
+        top.addView(art,new LinearLayout.LayoutParams(dp(70),dp(70)));
 
-        TextView title = text("IR S&T FIELD ASSISTANT",23,true);
-        title.setTextColor(Color.WHITE);
-        title.setPadding(dp(8),0,0,dp(2));
-        headerText.addView(title);
+        LinearLayout ht = new LinearLayout(this);
+        ht.setOrientation(LinearLayout.VERTICAL);
+        ht.setPadding(dp(12),0,0,0);
 
-        TextView subtitle = text(
-            "Railway Signalling • Maintenance • Troubleshooting",
-            12,false);
-        subtitle.setTextColor(Color.rgb(225,238,248));
-        subtitle.setPadding(dp(8),0,0,0);
-        headerText.addView(subtitle);
+        TextView app = text("IR S&T FIELD ASSISTANT",20,Color.WHITE,true);
+        TextView sub = text("Railway Signalling • Field Maintenance",12,Color.rgb(205,220,235),false);
+        ht.addView(app);
+        ht.addView(sub);
+        top.addView(ht,new LinearLayout.LayoutParams(0,-2,1));
 
-        header.addView(headerText,new LinearLayout.LayoutParams(0,-2,1));
-        root.addView(header,new LinearLayout.LayoutParams(-1,-2));
-
+        header.addView(top);
 
         search = new EditText(this);
-        search.setHint("Search relay, equipment, fault or module…");
         search.setSingleLine(true);
-        search.setPadding(dp(14),0,dp(14),0);
+        search.setHint("Search equipment, fault, relay, system...");
+        search.setTextSize(14);
+        search.setPadding(dp(14),0,dp(12),0);
+        search.setBackground(round(Color.WHITE,1,Color.rgb(215,225,235),0,0,12));
+        LinearLayout.LayoutParams sp=new LinearLayout.LayoutParams(-1,dp(46));
+        sp.topMargin=dp(14);
+        header.addView(search,sp);
 
-        GradientDrawable searchBg = new GradientDrawable();
-        searchBg.setColor(Color.WHITE);
-        searchBg.setCornerRadius(dp(14));
-        search.setBackground(searchBg);
+        search.setOnEditorActionListener((v,a,e)->{ filterHome(search.getText().toString()); return true; });
+        search.setOnKeyListener((v,key,event)->{
+            filterHome(search.getText().toString());
+            return false;
+        });
 
-        LinearLayout.LayoutParams searchLp =
-            new LinearLayout.LayoutParams(-1,dp(52));
-        searchLp.setMargins(0,dp(14),0,dp(10));
-        root.addView(search,searchLp);
+        root.addView(header,new LinearLayout.LayoutParams(-1,-2));
 
-        TextView source = text(
-            "OFFLINE KNOWLEDGE  •  OFFICIAL SOURCES  •  ONLINE ASSISTANCE",
-            11,true);
-        source.setTextColor(Color.rgb(35,105,80));
-        root.addView(source);
-
-        ScrollView scroll = new ScrollView(this);
-        list = new LinearLayout(this);
-        list.setOrientation(LinearLayout.VERTICAL);
-        TextView section = text("S&T KNOWLEDGE & FIELD TOOLS",13,true);
-        section.setTextColor(Color.rgb(15,72,105));
-        section.setPadding(dp(4),dp(8),dp(4),dp(4));
-        list.addView(section);
-        scroll.addView(list);
-
-        LinearLayout.LayoutParams scrollLp =
-            new LinearLayout.LayoutParams(-1,0,1);
-        root.addView(scroll,scrollLp);
-
-        TextView footer = text(
-            "DEVELOPED BY PRATIK MUKHERJEE (SIM/ASN/ER)",
-            10,true);
-        footer.setGravity(Gravity.CENTER);
-        footer.setTextColor(Color.rgb(15,72,105));
-        footer.setPadding(0,dp(10),0,0);
-        root.addView(footer,new LinearLayout.LayoutParams(-1,-2));
+        ScrollView sv=new ScrollView(this);
+        content=new LinearLayout(this);
+        content.setOrientation(LinearLayout.VERTICAL);
+        content.setPadding(dp(12),dp(12),dp(12),dp(24));
+        sv.addView(content);
+        root.addView(sv,new LinearLayout.LayoutParams(-1,0,1));
 
         setContentView(root);
-        render("");
-
-        search.addTextChangedListener(new TextWatcher() {
-            public void beforeTextChanged(CharSequence s,int a,int c,int d){}
-            public void onTextChanged(CharSequence s,int a,int b,int c){
-                render(s.toString());
-            }
-            public void afterTextChanged(Editable e){}
-        });
+        renderHome("");
     }
 
-    void render(String query) {
-        list.removeAllViews();
-
-        String q = query.toLowerCase(Locale.ROOT).trim();
-
-        for (final String[] m : MODULES) {
-
-            String all = (m[0] + " " + m[1]).toLowerCase(Locale.ROOT);
-
-            if (!q.isEmpty() && !all.contains(q))
-                continue;
-
-            LinearLayout card = new LinearLayout(this);
-            card.setOrientation(LinearLayout.VERTICAL);
-            card.setPadding(dp(8),dp(9),dp(8),dp(9));
-            card.setBackground(cardBackground()); card.setElevation(dp(4));
-
-            LinearLayout row = new LinearLayout(this);
-            row.setOrientation(LinearLayout.HORIZONTAL);
-            row.setGravity(Gravity.CENTER_VERTICAL);
-
-            ImageView icon = new ImageView(this);
-            icon.setImageResource(iconForModule(m[0]));
-            icon.setPadding(dp(9),dp(9),dp(9),dp(9));
-
-            GradientDrawable iconBg = new GradientDrawable();
-            iconBg.setColor(Color.rgb(235,243,249));
-            iconBg.setCornerRadius(dp(14));
-            icon.setBackground(iconBg);
-
-            row.addView(icon,new LinearLayout.LayoutParams(dp(66),dp(66)));
-
-            LinearLayout words = new LinearLayout(this);
-            words.setOrientation(LinearLayout.VERTICAL);
-
-            TextView h = text(m[0],15,true);
-            h.setTextColor(Color.rgb(18,72,115));
-
-            TextView d = text(m[1],12,false);
-            d.setTextColor(Color.rgb(75,85,98));
-
-            words.addView(h);
-            words.addView(d);
-            row.addView(words,new LinearLayout.LayoutParams(0,-2,1));
-
-            card.addView(row);
-
-            LinearLayout.LayoutParams lp =
-                new LinearLayout.LayoutParams(-1,-2);
-            lp.setMargins(0,dp(7),0,dp(7));
-
-            list.addView(card,lp);
-
-            card.setOnClickListener(v -> showModule(m[0],m[1]));
+    private void renderHome(String q) {
+        content.removeAllViews();
+        String last="";
+        for(Module m:modules){
+            if(q.length()>0 && !(m.name+" "+m.desc+" "+m.category).toLowerCase().contains(q.toLowerCase())) continue;
+            if(!m.category.equals(last)){
+                TextView cat=text(m.category,13,GOLD,true);
+                cat.setPadding(dp(4),dp(10),0,dp(7));
+                content.addView(cat);
+                last=m.category;
+            }
+            content.addView(moduleCard(m));
         }
+
+        if(content.getChildCount()==0){
+            TextView no=text("No matching S&T topic found.\nTry relay, point, signal, IPS, cable, MSDAC, KAVACH or fault.",15,MUTED,false);
+            no.setGravity(Gravity.CENTER);
+            no.setPadding(dp(20),dp(50),dp(20),dp(50));
+            content.addView(no);
+        }
+
+        LinearLayout footer=new LinearLayout(this);
+        footer.setOrientation(LinearLayout.VERTICAL);
+        footer.setGravity(Gravity.CENTER);
+        footer.setPadding(0,dp(20),0,dp(8));
+        footer.addView(text("IR S&T FIELD ASSISTANT",13,NAVY,true));
+        footer.addView(text("DEVELOPED BY PRATIK MUKHERJEE (SIM/ASN/ER)",11,MUTED,false));
+        content.addView(footer);
     }
 
-    void showRelayLibrary() {
-    final String[][] relays = {
-        {"WKR1", "Point Detection Relay", "RRI", "Siemens", "Point detection / correspondence"},
-        {"K-50", "Point Circuit / Control Relay", "RRI", "Siemens", "Point control circuit"},
-        {"QN1", "Plug-in Signalling Relay", "TCAS / KAVACH", "Verify make/model", "Interface application"},
-        {"QNA1", "Plug-in Signalling Relay", "TCAS / KAVACH", "Verify make/model", "Interface application"},
-        {"NWKR", "Normal Detection Relay", "Point Detection", "Station-specific", "Normal position detection"},
-        {"RWKR", "Reverse Detection Relay", "Point Detection", "Station-specific", "Reverse position detection"},
-        {"WNR", "Relay Designation", "Relay Interlocking", "Station-specific", "Function must be verified from approved circuit"},
-        {"WRR", "Relay Designation", "Relay Interlocking", "Station-specific", "Function must be verified from approved circuit"},
-        {"HPR", "Relay Designation", "RRI / Relay Logic", "Station-specific", "Function must be verified from approved circuit"},
-        {"DPR", "Relay Designation", "RRI / Relay Logic", "Station-specific", "Function must be verified from approved circuit"},
-        {"ECR", "Relay Designation", "RRI / Relay Logic", "Station-specific", "Function must be verified from approved circuit"}
-    };
+    private void filterHome(String q){ renderHome(q); }
 
-    LinearLayout root = new LinearLayout(this);
-    root.setOrientation(LinearLayout.VERTICAL);
-    root.setPadding(20, 18, 20, 20);
-    root.setBackgroundColor(Color.rgb(245, 247, 250));
+    private View moduleCard(final Module m){
+        LinearLayout card=new LinearLayout(this);
+        card.setGravity(Gravity.CENTER_VERTICAL);
+        card.setPadding(dp(12),dp(10),dp(10),dp(10));
+        card.setBackground(round(Color.WHITE,1,Color.rgb(218,226,235),0,0,14));
+        card.setElevation(dp(2));
 
-    TextView title = new TextView(this);
-    title.setText("RELAY & EQUIPMENT LIBRARY");
-    title.setTextSize(22);
-    title.setTextColor(Color.rgb(20, 45, 80));
-    title.setTypeface(null, android.graphics.Typeface.BOLD);
-    root.addView(title);
+        TextView icon=text(m.icon,25,BLUE,true);
+        icon.setGravity(Gravity.CENTER);
+        icon.setBackground(round(Color.rgb(232,241,251),0,0,0,0,12));
+        card.addView(icon,new LinearLayout.LayoutParams(dp(48),dp(48)));
 
-    TextView subtitle = new TextView(this);
-    subtitle.setText("Search by designation, function, system or make/model.");
-    subtitle.setTextSize(13);
-    subtitle.setTextColor(Color.DKGRAY);
-    subtitle.setPadding(0, 6, 0, 12);
-    root.addView(subtitle);
+        LinearLayout t=new LinearLayout(this);
+        t.setOrientation(LinearLayout.VERTICAL);
+        t.setPadding(dp(12),0,dp(6),0);
+        t.addView(text(m.name,15,TEXT,true));
+        TextView d=text(m.desc,11,MUTED,false);
+        d.setMaxLines(2);
+        t.addView(d);
+        card.addView(t,new LinearLayout.LayoutParams(0,-2,1));
 
-    EditText search = new EditText(this);
-    search.setHint("Search relay / function / system...");
-    search.setSingleLine(true);
-    root.addView(search);
+        TextView arrow=text("›",28,MUTED,false);
+        card.addView(arrow,new LinearLayout.LayoutParams(dp(25),-2));
 
-    ScrollView scroll = new ScrollView(this);
-    LinearLayout list = new LinearLayout(this);
-    list.setOrientation(LinearLayout.VERTICAL);
-    list.setPadding(0, 12, 0, 12);
-    scroll.addView(list);
-    root.addView(scroll, new LinearLayout.LayoutParams(
-        LinearLayout.LayoutParams.MATCH_PARENT, 0, 1));
+        card.setOnClickListener(v->showModule(m));
+        LinearLayout.LayoutParams cp=new LinearLayout.LayoutParams(-1,-2);
+        cp.bottomMargin=dp(8);
+        content.addView(card,cp);
+        return new Space(this);
+    }
 
-    TextView footer = new TextView(this);
-    footer.setText("DEVELOPED BY PRATIK MUKHERJEE (SIM/ASN/ER)");
-    footer.setTextSize(12);
-    footer.setTextColor(Color.rgb(20, 45, 80));
-    footer.setGravity(Gravity.CENTER);
-    footer.setPadding(0, 12, 0, 4);
-    root.addView(footer);
+    private void showModule(Module m){
+        if(m.name.equals("Fault Finder")) { showFaultFinder(); return; }
+        if(m.name.equals("Station Profile")) { showStationProfile(); return; }
+        if(m.name.equals("Relay & Equipment Library")) { showRelayLibrary(); return; }
+        showInformation(m);
+    }
 
-    final Runnable[] render = new Runnable[1];
+    private void baseScreen(String screenTitle){
+        root=new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setBackgroundColor(BG);
 
-    render[0] = new Runnable() {
-        public void run() {
-            String q = search.getText().toString().trim().toLowerCase();
-            list.removeAllViews();
+        LinearLayout bar=new LinearLayout(this);
+        bar.setGravity(Gravity.CENTER_VERTICAL);
+        bar.setPadding(dp(8),0,dp(12),0);
+        bar.setBackgroundColor(NAVY);
 
-            int count = 0;
+        TextView back=text("‹",38,Color.WHITE,false);
+        back.setGravity(Gravity.CENTER);
+        back.setOnClickListener(v->showHome());
+        bar.addView(back,new LinearLayout.LayoutParams(dp(52),dp(58)));
 
-            for (String[] r : relays) {
-                String searchable =
-                    r[0] + " " + r[1] + " " + r[2] + " " + r[3] + " " + r[4];
+        title=text(screenTitle,18,Color.WHITE,true);
+        bar.addView(title,new LinearLayout.LayoutParams(0,-2,1));
+        bar.addView(text("⋮",26,Color.WHITE,false),new LinearLayout.LayoutParams(dp(30),-2));
+        root.addView(bar);
 
-                if (q.length() > 0 &&
-                    !searchable.toLowerCase().contains(q)) {
-                    continue;
-                }
+        content=new LinearLayout(this);
+        content.setOrientation(LinearLayout.VERTICAL);
+        content.setPadding(dp(12),dp(12),dp(12),dp(20));
 
-                count++;
-
-                TextView card = new TextView(SntDashboardActivity.this);
-                card.setText(
-                    r[0] + "  •  " + r[1] +
-                    "\n" + r[2] + "  |  " + r[3] +
-                    "\n" + r[4]
-                );
-                card.setTextSize(14);
-                card.setTextColor(Color.rgb(35, 45, 58));
-                card.setPadding(18, 16, 18, 16);
-                card.setBackgroundColor(Color.WHITE);
-                card.setGravity(Gravity.CENTER_VERTICAL);
-
-                LinearLayout.LayoutParams lp =
-                    new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT);
-                lp.setMargins(0, 0, 0, 10);
-                list.addView(card, lp);
-
-                final String designation = r[0];
-                final String function = r[1];
-                final String system = r[2];
-                final String make = r[3];
-                final String application = r[4];
-
-                card.setOnClickListener(v ->
-                    showRelayDetail(
-                        designation,
-                        function,
-                        system,
-                        make,
-                        application));
-            }
-
-            if (count == 0) {
-                TextView empty = new TextView(SntDashboardActivity.this);
-                empty.setText("No matching relay/equipment found.");
-                empty.setTextSize(14);
-                empty.setTextColor(Color.DKGRAY);
-                empty.setPadding(12, 24, 12, 24);
-                list.addView(empty);
-            }
-        }
-    };
-
-    search.addTextChangedListener(new android.text.TextWatcher() {
-        public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-        public void onTextChanged(CharSequence s, int start, int before, int count) {
-            render[0].run();
-        }
-        public void afterTextChanged(android.text.Editable s) {}
-    });
-
-    render[0].run();
-    Button forecastButton = new Button(this);
-    forecastButton.setText("PREDICTIVE MAINTENANCE / AI FORECAST");
-    forecastButton.setTextSize(13);
-    forecastButton.setOnClickListener(v -> showPredictiveMaintenance());
-
-    root.addView(forecastButton, new LinearLayout.LayoutParams(
-        LinearLayout.LayoutParams.MATCH_PARENT,
-        LinearLayout.LayoutParams.WRAP_CONTENT));
-
-    setContentView(root);
-}
-
-void showPredictiveMaintenance() {
-    LinearLayout root = new LinearLayout(this);
-    root.setOrientation(LinearLayout.VERTICAL);
-    root.setPadding(20, 18, 20, 20);
-    root.setBackgroundColor(Color.rgb(245, 247, 250));
-
-    TextView title = new TextView(this);
-    title.setText("PREDICTIVE MAINTENANCE / AI FORECAST");
-    title.setTextSize(21);
-    title.setTextColor(Color.rgb(20, 45, 80));
-    title.setTypeface(null, android.graphics.Typeface.BOLD);
-    root.addView(title);
-
-    TextView intro = new TextView(this);
-    intro.setText("Enter observed equipment and maintenance information for a structured risk assessment.");
-    intro.setTextSize(13);
-    intro.setTextColor(Color.DKGRAY);
-    intro.setPadding(0, 8, 0, 14);
-    root.addView(intro);
-
-    ScrollView scroll = new ScrollView(this);
-    LinearLayout form = new LinearLayout(this);
-    form.setOrientation(LinearLayout.VERTICAL);
-    form.setPadding(4, 4, 4, 12);
-    scroll.addView(form);
-
-    EditText equipment = new EditText(this);
-    equipment.setHint("Equipment / relay / system");
-    equipment.setSingleLine(true);
-    form.addView(equipment);
-
-    EditText faultCount = new EditText(this);
-    faultCount.setHint("Fault occurrences in recent period");
-    faultCount.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);
-    faultCount.setSingleLine(true);
-    form.addView(faultCount);
-
-    EditText symptom = new EditText(this);
-    symptom.setHint("Repeated / intermittent symptom");
-    symptom.setSingleLine(false);
-    form.addView(symptom);
-
-    EditText measurement = new EditText(this);
-    measurement.setHint("Observed measurement / test result");
-    measurement.setSingleLine(false);
-    form.addView(measurement);
-
-    EditText maintenance = new EditText(this);
-    maintenance.setHint("Last maintenance / inspection observation");
-    maintenance.setSingleLine(false);
-    form.addView(maintenance);
-
-    EditText history = new EditText(this);
-    history.setHint("Previous fault history / remarks");
-    history.setSingleLine(false);
-    form.addView(history);
-
-    Button analyse = new Button(this);
-    analyse.setText("ANALYSE FAILURE RISK");
-    form.addView(analyse);
-
-    TextView result = new TextView(this);
-    result.setTextSize(14);
-    result.setTextColor(Color.rgb(35, 45, 58));
-    result.setPadding(12, 18, 12, 18);
-    form.addView(result);
-
-    analyse.setOnClickListener(v -> {
-        String eq = equipment.getText().toString().trim();
-        String fc = faultCount.getText().toString().trim();
-        String sym = symptom.getText().toString().trim();
-        String meas = measurement.getText().toString().trim();
-        String maint = maintenance.getText().toString().trim();
-        String hist = history.getText().toString().trim();
-
-        if (eq.length() == 0) {
-            result.setText("Enter the equipment / relay / system name first.");
-            return;
-        }
-
-        int faults = 0;
-        try {
-            if (fc.length() > 0) {
-                faults = Integer.parseInt(fc);
-            }
-        } catch (Exception ignored) {
-            faults = 0;
-        }
-
-        StringBuilder out = new StringBuilder();
-
-        out.append("FAILURE FORECAST\n\n");
-        out.append("Equipment: ").append(eq).append("\n\n");
-
-        if (faults >= 3) {
-            out.append("Risk indicator: RECURRENT FAULT PATTERN DETECTED\n");
-        } else if (faults > 0) {
-            out.append("Risk indicator: FAULT HISTORY PRESENT\n");
-        } else {
-            out.append("Risk indicator: INSUFFICIENT FAULT HISTORY\n");
-        }
-
-        if (sym.length() > 0) {
-            out.append("\nObserved symptom:\n");
-            out.append(sym).append("\n");
-        }
-
-        if (meas.length() > 0) {
-            out.append("\nMeasurement evidence:\n");
-            out.append(meas).append("\n");
-            out.append("Compare the observed value with the applicable approved specification.\n");
-        }
-
-        out.append("\nRECOMMENDED CHECKING PATH\n");
-        out.append("1. Confirm exact station and system configuration.\n");
-        out.append("2. Check present indication, alarm and event history.\n");
-        out.append("3. Compare with previous fault records.\n");
-        out.append("4. Check the approved indoor circuit or interface.\n");
-        out.append("5. Check location-box and field interface where applicable.\n");
-        out.append("6. Verify outdoor equipment and correspondence.\n");
-        out.append("7. Record measured values against the approved specification.\n");
-        out.append("8. Perform only authorised corrective maintenance.\n");
-
-        if (maint.length() > 0 || hist.length() > 0) {
-            out.append("\nHISTORICAL INFORMATION CAPTURED\n");
-            out.append("Maintenance observations and previous fault history have been recorded for future trend analysis.\n");
-        }
-
-        out.append("\nCORRECTIVE / PREVENTIVE ACTION\n");
-        out.append("Verify the actual failure evidence before replacing a component. ");
-        out.append("For recurring faults, record the event, measured values, equipment state and corrective action ");
-        out.append("so future trend analysis can identify developing patterns.\n");
-
-        out.append("\nAI FORECAST STATUS\n");
-        out.append("This version provides rule-based decision support. ");
-        out.append("A future AI model can analyse accumulated station history and measurement trends. ");
-        out.append("No exact future failure date is predicted without sufficient verified historical data.\n");
-
-        out.append("\nSAFETY\n");
-        out.append("Do not bypass, bridge, short, force or defeat any vital circuit or safety function. ");
-        out.append("Follow the approved station circuit, control table, Railway instructions, ");
-        out.append("RDSO/CAMTECH guidance and manufacturer documentation.");
-
-        result.setText(out.toString());
-    });
-
-    root.addView(scroll, new LinearLayout.LayoutParams(
-        LinearLayout.LayoutParams.MATCH_PARENT, 0, 1));
-
-    TextView footer = new TextView(this);
-    footer.setText("DEVELOPED BY PRATIK MUKHERJEE (SIM/ASN/ER)");
-    footer.setTextSize(12);
-    footer.setTextColor(Color.rgb(20, 45, 80));
-    footer.setGravity(Gravity.CENTER);
-    footer.setPadding(0, 10, 0, 4);
-    root.addView(footer);
-
-    setContentView(root);
-}
-
-void showRelayDetail(
-        String designation,
-        String function,
-        String system,
-        String make,
-        String application) {
-
-    LinearLayout root = new LinearLayout(this);
-    root.setOrientation(LinearLayout.VERTICAL);
-    root.setPadding(20, 18, 20, 20);
-    root.setBackgroundColor(Color.rgb(245, 247, 250));
-
-    TextView title = new TextView(this);
-    title.setText(designation);
-    title.setTextSize(24);
-    title.setTextColor(Color.rgb(20, 45, 80));
-    title.setTypeface(null, android.graphics.Typeface.BOLD);
-    root.addView(title);
-
-    TextView summary = new TextView(this);
-    summary.setText(
-        function +
-        "\n\nSystem: " + system +
-        "\nMake / Model: " + make +
-        "\nApplication: " + application
-    );
-    summary.setTextSize(15);
-    summary.setTextColor(Color.rgb(35, 45, 58));
-    summary.setPadding(8, 14, 8, 18);
-    root.addView(summary);
-
-    ScrollView scroll = new ScrollView(this);
-    LinearLayout details = new LinearLayout(this);
-    details.setOrientation(LinearLayout.VERTICAL);
-    details.setPadding(8, 4, 8, 20);
-    scroll.addView(details);
-
-    addRelayField(details, "Designation / Relay Type", designation);
-    addRelayField(details, "Function / Application", function);
-    addRelayField(details, "System / Interlocking Type", system);
-    addRelayField(details, "Make / Model / Version", make);
-    addRelayField(details, "Relay Style / Construction", "To be verified");
-    addRelayField(details, "Front Contacts", "To be verified");
-    addRelayField(details, "Back Contacts", "To be verified");
-    addRelayField(details, "Coil Voltage", "To be verified");
-    addRelayField(details, "Coil Resistance", "To be verified");
-    addRelayField(details, "Pick-up Voltage / Current", "To be verified");
-    addRelayField(details, "Drop-away Voltage / Current", "To be verified");
-    addRelayField(details, "Normal Working Voltage / Current", "To be verified");
-    addRelayField(details, "Contact Rating", "To be verified");
-    addRelayField(details, "Socket / Base / Coding", "To be verified");
-    addRelayField(details, "Dimensions / Physical Identification", "To be verified");
-    addRelayField(details, "Maintenance / Testing Notes", "To be verified");
-    addRelayField(details, "Official Source / Document / Page", "To be added after verification");
-    addRelayField(details, "Verification Status", "Pending official-source verification");
-
-    TextView safety = new TextView(this);
-    safety.setText(
-        "SAFETY NOTE\n\n" +
-        "Relay designation and function can be station/circuit specific. " +
-        "Do not infer a vital function from the relay abbreviation alone. " +
-        "Approved station circuit, control table, Railway instructions, " +
-        "RDSO/CAMTECH guidance and manufacturer documentation take precedence."
-    );
-    safety.setTextSize(13);
-    safety.setTextColor(Color.rgb(110, 50, 20));
-    safety.setPadding(12, 18, 12, 18);
-    details.addView(safety);
-
-    root.addView(scroll, new LinearLayout.LayoutParams(
-        LinearLayout.LayoutParams.MATCH_PARENT, 0, 1));
-
-    TextView footer = new TextView(this);
-    footer.setText("DEVELOPED BY PRATIK MUKHERJEE (SIM/ASN/ER)");
-    footer.setTextSize(12);
-    footer.setTextColor(Color.rgb(20, 45, 80));
-    footer.setGravity(Gravity.CENTER);
-    footer.setPadding(0, 10, 0, 4);
-    root.addView(footer);
-
-    setContentView(root);
-}
-
-void addRelayField(LinearLayout parent, String label, String value) {
-    TextView field = new TextView(this);
-    field.setText(label + "\n" + value);
-    field.setTextSize(14);
-    field.setTextColor(Color.rgb(35, 45, 58));
-    field.setPadding(14, 12, 14, 12);
-    field.setBackgroundColor(Color.WHITE);
-
-    LinearLayout.LayoutParams lp =
-        new LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT,
-            LinearLayout.LayoutParams.WRAP_CONTENT);
-    lp.setMargins(0, 0, 0, 6);
-    parent.addView(field, lp);
-}
-
-void showStationProfile() {
-        final String[] keys = {"station","interlocking","ei_make","relay","relay_nomenclature","rack","panel","point_machine","signal","detection","block","kavach","power","outdoor","other"};
-        final String[] labels = {"Station Name / Code","Interlocking: PI / RRI / EI","Interlocking / EI Make, Model, Version","Relay Family / Siemens K-series","Station Relay Nomenclature / Designation","Relay Room Rack / Shelf Details","Panel / VDU Make and Type","Point Machine Make / Type","Signal / Lamp / LED Type","Track Detection / MSDAC / Track Circuit","BPAC / HASSDAC / UFSBI / Block System","KAVACH / TCAS Make and Version","Signalling Power Supply Arrangement","Outdoor Equipment / Location Box Details","Other Indoor / Outdoor Equipment"};
-        final android.content.SharedPreferences sp = getSharedPreferences("station_profile", MODE_PRIVATE);
-        LinearLayout box = new LinearLayout(this);
-        box.setOrientation(LinearLayout.VERTICAL); box.setBackgroundColor(Color.rgb(245,247,250));
-        box.setPadding(dp(12),dp(4),dp(12),dp(4));
-        final EditText[] fields = new EditText[keys.length];
-        for(int i=0;i<keys.length;i++) {
-            fields[i]=new EditText(this);
-            fields[i].setHint(labels[i]); fields[i].setTextSize(14); fields[i].setTextColor(Color.rgb(35,45,58));
-            fields[i].setSingleLine(false);
-            fields[i].setText(sp.getString(keys[i],""));
-            box.addView(fields[i],new LinearLayout.LayoutParams(-1,dp(52)));
-        }
         ScrollView sv=new ScrollView(this);
-        sv.addView(box);
-        new AlertDialog.Builder(this)
-            .setTitle("STATION PROFILE • CONFIGURATION")
-            .setMessage("Enter the actual station configuration. Fault Finder will use this profile before diagnosis.")
-            .setView(sv)
-            .setNegativeButton("CANCEL",null)
-            .setPositiveButton("SAVE",(d,w)->{
-                saveStationProfileData(keys, fields);
-                Toast.makeText(this,"Station profile saved.",Toast.LENGTH_SHORT).show();
-            }).show();
+        sv.addView(content);
+        root.addView(sv,new LinearLayout.LayoutParams(-1,0,1));
+        setContentView(root);
     }
 
-    String stationProfileSummary() {
-        android.content.SharedPreferences sp=getSharedPreferences("station_profile",MODE_PRIVATE);
-        String st=sp.getString("station",""), in=sp.getString("interlocking",""), ei=sp.getString("ei_make",""), re=sp.getString("relay",""), rn=sp.getString("relay_nomenclature",""), ra=sp.getString("rack",""), pa=sp.getString("panel",""), pm=sp.getString("point_machine",""), si=sp.getString("signal",""), de=sp.getString("detection",""), bl=sp.getString("block",""), ka=sp.getString("kavach",""), po=sp.getString("power",""), ou=sp.getString("outdoor",""), ot=sp.getString("other","");
-        if(st.isEmpty() && in.isEmpty() && re.isEmpty()) return "STATION PROFILE: Not configured. Complete the profile before installation-specific diagnosis.\n\n";
-        return "ACTIVE STATION PROFILE\nStation: "+st+"\nInterlocking: "+in+"\nEI/Interlocking Make: "+ei+"\nRelay Family: "+re+"\nRelay Nomenclature: "+rn+"\nRack/Shelf: "+ra+"\nPanel/VDU: "+pa+"\nPoint Machine: "+pm+"\nSignal Type: "+si+"\nDetection: "+de+"\nBlock System: "+bl+"\nKAVACH: "+ka+"\nPower: "+po+"\nOutdoor: "+ou+"\nOther: "+ot+"\n\n";
+    private void showInformation(Module m){
+        baseScreen(m.name);
+
+        addHero(m.name,m.desc);
+
+        if(m.name.equals("Point Machine")) pointContent();
+        else if(m.name.equals("Signal LED")) signalLedContent();
+        else if(m.name.equals("Track Circuit")) trackContent();
+        else if(m.name.equals("Insulated Rail Joints")) jointContent();
+        else if(m.name.equals("Signalling Cable")) cableContent();
+        else if(m.name.equals("IPS / Signalling Power")) ipsContent();
+        else if(m.name.equals("L/C Gate – ELB / MLB")) lcContent();
+        else if(m.name.equals("Automatic Signalling")) autoContent();
+        else if(m.name.equals("KAVACH / TCAS")) kavachContent();
+        else if(m.name.equals("MSDAC / Axle Counter")) axleContent();
+        else if(m.name.equals("Electronic Interlocking")) eiContent();
+        else if(m.name.equals("Relay & Circuits")) relayContent();
+        else if(m.name.equals("Signal & Point")) signalPointContent();
+        else if(m.name.equals("RRI / Panel")) rriContent();
+        else if(m.name.equals("BPAC / HASSDAC")) bpacContent();
+        else if(m.name.equals("UFSBI / Block Instruments")) ufsbiContent();
+        else if(m.name.equals("Fire Alarm System")) fireContent();
+        else if(m.name.equals("Outdoor Equipment Library")) outdoorContent();
+        else if(m.name.equals("Station Classification")) stationClassContent();
+        else if(m.name.equals("Earthing & Surge Protection")) earthContent();
+        else if(m.name.equals("Maintainer Toolkit")) toolkitContent();
+        else if(m.name.equals("JE / SSE Mode")) jeContent();
+        else if(m.name.equals("Manuals & Sources")) sourceContent();
+        else genericContent(m);
     }
 
-    private String getConfigurationGuidance(String faultType) {
-        String interlocking = getStationProfileValue("interlocking").toUpperCase();
-        String relay = getStationProfileValue("relay").toUpperCase();
-        String area = getStationProfileValue("outdoor").toUpperCase();
-
-        StringBuilder g = new StringBuilder();
-
-        if (interlocking.contains("EI")) {
-            g.append("EI CONFIGURATION: Check approved EI diagnostics, vital I/O/interface status, communication and event logs.\\n");
-        } else if (interlocking.contains("RRI")) {
-            g.append("RRI CONFIGURATION: Trace panel command -> relay logic -> location box -> field equipment and correspondence.\\n");
-        } else if (interlocking.contains("PI")) {
-            g.append("PI CONFIGURATION: Verify approved panel/interlocking circuit, relay/interface path and field correspondence.\\n");
-        }
-
-        if (relay.contains("SIEMENS") || relay.contains("K-") || relay.contains("K50")) {
-            g.append("RELAY CONFIGURATION: Siemens/K-series information is present; verify exact relay designation and approved circuit before testing.\\n");
-        }
-
-        if (area.contains("OUTDOOR") || area.contains("LOCATION")) {
-            g.append("FIELD CONFIGURATION: Include location box, cable route, field equipment and outdoor correspondence in the fault path.\\n");
-        }
-
-        if (faultType != null && faultType.toUpperCase().contains("POINT")) {
-            g.append("POINT FOCUS: Check command, control output, point machine, detection and NWKR/RWKR or equivalent correspondence.\\n");
-        } else if (faultType != null && faultType.toUpperCase().contains("SIGNAL")) {
-            g.append("SIGNAL FOCUS: Check route conditions, detection, points, signal control and final outdoor indication.\\n");
-        } else if (faultType != null && faultType.toUpperCase().contains("TRACK")) {
-            g.append("DETECTION FOCUS: Check field detection/evaluator/interface, communication and authorised reset procedure.\\n");
-        }
-
-        return g.toString().trim();
-    }
-
-    private String getSavedStationContext() {
-        String station = getStationProfileValue("station");
-        String interlocking = getStationProfileValue("interlocking");
-        String relay = getStationProfileValue("relay");
-        String outdoor = getStationProfileValue("outdoor");
-        String point = getStationProfileValue("point_machine");
-        String detection = getStationProfileValue("detection");
-        String block = getStationProfileValue("block");
-        String kavach = getStationProfileValue("kavach");
-
-        StringBuilder b = new StringBuilder();
-        if (!station.isEmpty()) b.append("Station: ").append(station).append("\n");
-        if (!interlocking.isEmpty()) b.append("Interlocking: ").append(interlocking).append("\n");
-        if (!relay.isEmpty()) b.append("Relay: ").append(relay).append("\n");
-        if (!point.isEmpty()) b.append("Point Machine: ").append(point).append("\n");
-        if (!detection.isEmpty()) b.append("Detection: ").append(detection).append("\n");
-        if (!block.isEmpty()) b.append("Block: ").append(block).append("\n");
-        if (!kavach.isEmpty()) b.append("KAVACH/TCAS: ").append(kavach).append("\n");
-        if (!outdoor.isEmpty()) b.append("Outdoor Equipment: ").append(outdoor);
-
-        return b.toString().trim();
-    }
-
-    private String getRelayLibraryGuidance(String relayInfo, String faultType) {
-        String relay = relayInfo == null ? "" : relayInfo.trim();
-        String fault = faultType == null ? "" : faultType.trim().toUpperCase();
-
-        if (relay.isEmpty()) {
-            return "No relay designation is saved in Station Profile. Verify the approved station circuit and relay nomenclature before testing.";
-        }
-
-        String r = relay.toUpperCase();
-        StringBuilder b = new StringBuilder();
-        b.append("Relay configuration recorded: ").append(relay).append("\n");
-
-        if (r.contains("K-50") || r.contains("K50") || r.contains("SIEMENS")) {
-            b.append("Siemens/K-series reference is indicated. Use the exact relay designation, approved circuit and verified manufacturer/RDSO data before applying any test value.\n");
-        }
-
-        if (r.contains("NWKR") || r.contains("RWKR") || fault.contains("POINT")) {
-            b.append("Point/detection relevance: verify point control, detection correspondence and the applicable NWKR/RWKR or equivalent relay path.\n");
-        }
-
-        if (r.contains("WNR") || r.contains("WRR") || r.contains("HPR") || r.contains("DPR") || r.contains("ECR")) {
-            b.append("Relay designation is station/circuit dependent. Confirm its exact function from the approved circuit before diagnosis.\n");
-        }
-
-        b.append("Relay Library values such as contact count, coil resistance, pick-up/drop-away values must be verified against the applicable official document and exact relay variant.");
-
-        return b.toString();
-    }
-
-    void showStationAwareFaultFinder() {
-    LinearLayout root = new LinearLayout(this);
-    root.setOrientation(LinearLayout.VERTICAL);
-    root.setPadding(20, 18, 20, 20);
-    root.setBackgroundColor(Color.rgb(245, 247, 250));
-
-    TextView title = new TextView(this);
-    title.setText("STATION-AWARE FAULT FINDER");
-    title.setTextSize(21);
-    title.setTextColor(Color.rgb(20, 45, 80));
-    title.setTypeface(null, android.graphics.Typeface.BOLD);
-    root.addView(title);
-
-    TextView info = new TextView(this);
-    info.setText("First identify the station configuration. Diagnosis will then use the selected system context.");
-    info.setTextSize(13);
-    info.setTextColor(Color.DKGRAY);
-    info.setPadding(0, 7, 0, 12);
-    root.addView(info);
-
-    ScrollView scroll = new ScrollView(this);
-        
-        String savedStationContext = getSavedStationContext();
-        if (!savedStationContext.isEmpty()) {
-            TextView stationContext = new TextView(this);
-            stationContext.setText("STATION CONFIGURATION • AUTO LOADED\n\n"
-                    + savedStationContext);
-            stationContext.setTextSize(13);
-            stationContext.setTextColor(Color.rgb(35, 45, 58));
-            stationContext.setPadding(28, 20, 28, 20);
-            stationContext.setBackgroundColor(Color.rgb(235, 241, 248));
-            root.addView(stationContext);
-        }
-
-    LinearLayout form = new LinearLayout(this);
-    form.setOrientation(LinearLayout.VERTICAL);
-    form.setPadding(4, 4, 4, 16);
-    scroll.addView(form);
-
-    TextView stationLabel = new TextView(this);
-    stationLabel.setText("STATION / LOCATION");
-    stationLabel.setTextSize(13);
-    stationLabel.setTextColor(Color.rgb(20, 45, 80));
-    form.addView(stationLabel);
-
-    EditText station = new EditText(this);
-    station.setHint("Station name / code");
-    station.setSingleLine(true);
-    form.addView(station);
-
-    TextView interlockingLabel = new TextView(this);
-    interlockingLabel.setText("INTERLOCKING TYPE");
-    interlockingLabel.setTextSize(13);
-    interlockingLabel.setTextColor(Color.rgb(20, 45, 80));
-    form.addView(interlockingLabel);
-
-    Spinner interlocking = new Spinner(this);
-    String[] interlockingOptions = {
-        "PI - Panel Interlocking",
-        "RRI - Route Relay Interlocking",
-        "EI - Electronic Interlocking",
-        "Not Known / Need Verification"
-    };
-    interlocking.setAdapter(new ArrayAdapter<String>(
-        this,
-        android.R.layout.simple_spinner_dropdown_item,
-        interlockingOptions
-    ));
-    form.addView(interlocking);
-
-    TextView relayLabel = new TextView(this);
-    relayLabel.setText("RELAY / INTERFACE FAMILY");
-    relayLabel.setTextSize(13);
-    relayLabel.setTextColor(Color.rgb(20, 45, 80));
-    form.addView(relayLabel);
-
-    Spinner relay = new Spinner(this);
-    String[] relayOptions = {
-        "Siemens K-Series / K50",
-        "WKR / NWKR / RWKR",
-        "QN / QNA",
-        "Other relay family",
-        "No relay information available"
-    };
-    relay.setAdapter(new ArrayAdapter<String>(
-        this,
-        android.R.layout.simple_spinner_dropdown_item,
-        relayOptions
-    ));
-    form.addView(relay);
-
-    TextView areaLabel = new TextView(this);
-    areaLabel.setText("FAULT AREA");
-    areaLabel.setTextSize(13);
-    areaLabel.setTextColor(Color.rgb(20, 45, 80));
-    form.addView(areaLabel);
-
-    Spinner area = new Spinner(this);
-    String[] areaOptions = {
-        "Indoor / Relay Room",
-        "EI / Equipment Room",
-        "Outdoor / Location Box / Field",
-        "Both Indoor and Outdoor",
-        "Not Known"
-    };
-    area.setAdapter(new ArrayAdapter<String>(
-        this,
-        android.R.layout.simple_spinner_dropdown_item,
-        areaOptions
-    ));
-    form.addView(area);
-
-    TextView faultLabel = new TextView(this);
-    faultLabel.setText("FAULT TYPE");
-    faultLabel.setTextSize(13);
-    faultLabel.setTextColor(Color.rgb(20, 45, 80));
-    form.addView(faultLabel);
-
-    Spinner fault = new Spinner(this);
-    String[] faultOptions = {
-        "Signal not clearing",
-        "Point not moving / detection fault",
-        "Track circuit / axle counter fault",
-        "EI / interlocking fault",
-        "BPAC / HASSDAC / UFSBI fault",
-        "KAVACH / TCAS fault",
-        "Other S&T fault"
-    };
-    fault.setAdapter(new ArrayAdapter<String>(
-        this,
-        android.R.layout.simple_spinner_dropdown_item,
-        faultOptions
-    ));
-    form.addView(fault);
-
-    EditText symptom = new EditText(this);
-    symptom.setHint("Exact indication / symptom / alarm / relay state");
-    symptom.setSingleLine(false);
-    form.addView(symptom);
-
-    EditText history = new EditText(this);
-    history.setHint("Previous occurrence / frequency / maintenance history");
-    history.setSingleLine(false);
-    form.addView(history);
-
-    Button analyse = new Button(this);
-    analyse.setText("START STATION-AWARE DIAGNOSIS");
-    form.addView(analyse);
-
-    TextView result = new TextView(this);
-    result.setTextSize(14);
-    result.setTextColor(Color.rgb(35, 45, 58));
-    result.setPadding(12, 18, 12, 18);
-    form.addView(result);
-
-    analyse.setOnClickListener(v -> {
-        String stn = station.getText().toString().trim();
-        String il = interlocking.getSelectedItem().toString();
-        String rl = relay.getSelectedItem().toString();
-        String ar = area.getSelectedItem().toString();
-        String ft = fault.getSelectedItem().toString();
-        String sy = symptom.getText().toString().trim();
-        String hi = history.getText().toString().trim();
-
-        if (stn.length() == 0) {
-            result.setText("Enter the station name / code first.");
-            return;
-        }
-
-        StringBuilder r = new StringBuilder();
-
-        r.append("STATION-AWARE FAULT ANALYSIS\n\n");
-        r.append("Station: ").append(stn).append("\n");
-        r.append("Interlocking: ").append(il).append("\n");
-        r.append("Relay / Interface: ").append(rl).append("\n");
-        r.append("Fault Area: ").append(ar).append("\n");
-        r.append("Fault Type: ").append(ft).append("\n");
-
-        if (sy.length() > 0) {
-            r.append("\nObserved indication:\n").append(sy).append("\n");
-        }
-
-        if (hi.length() > 0) {
-            r.append("\nPrevious history:\n").append(hi).append("\n");
-        }
-
-        r.append("\nDIAGNOSTIC PATH\n");
-
-        if (ft.startsWith("Signal")) {
-            r.append("1. Confirm signal indication and route status.\n");
-            r.append("2. Check route conditions and route locking.\n");
-            r.append("3. Check relevant track detection.\n");
-            r.append("4. Check point detection / correspondence.\n");
-            r.append("5. Trace approved signal control logic.\n");
-            r.append("6. Check relay / EI output and corresponding field interface.\n");
-            r.append("7. Compare relay-room indication with outdoor equipment.\n");
-        } else if (ft.startsWith("Point")) {
-            r.append("1. Confirm commanded position.\n");
-            r.append("2. Verify interlocking permission.\n");
-            r.append("3. Check point control output.\n");
-            r.append("4. Trace approved control circuit to location box.\n");
-            r.append("5. Check point machine supply and operation.\n");
-            r.append("6. Check detection and correspondence.\n");
-            r.append("7. Compare indoor indication with actual field position.\n");
-        } else if (ft.startsWith("Track")) {
-            r.append("1. Confirm affected section indication.\n");
-            r.append("2. Identify track circuit / axle counter equipment.\n");
-            r.append("3. Check evaluator / interface status.\n");
-            r.append("4. Check communication and event diagnostics.\n");
-            r.append("5. Verify field detection and correspondence.\n");
-            r.append("6. Follow only authorised reset procedure where applicable.\n");
-        } else if (ft.startsWith("EI")) {
-            r.append("1. Confirm EI make, model and version.\n");
-            r.append("2. Check diagnostic / alarm information.\n");
-            r.append("3. Identify affected function or I/O.\n");
-            r.append("4. Check approved interface and power/status indications.\n");
-            r.append("5. Check communication / event logs.\n");
-            r.append("6. Verify corresponding field equipment.\n");
-        } else if (ft.startsWith("BPAC")) {
-            r.append("1. Check both-end indications.\n");
-            r.append("2. Check block interface status.\n");
-            r.append("3. Check communication / equipment health.\n");
-            r.append("4. Check approved relay/interface path.\n");
-            r.append("5. Review event history.\n");
-            r.append("6. Follow authorised block reset / restoration procedure.\n");
-        } else if (ft.startsWith("KAVACH")) {
-            r.append("1. Confirm onboard / trackside context.\n");
-            r.append("2. Check equipment health and diagnostic indication.\n");
-            r.append("3. Check communication status.\n");
-            r.append("4. Check location / RFID related indication where applicable.\n");
-            r.append("5. Check signalling interface and event records.\n");
-            r.append("6. Verify trackside correspondence.\n");
-        } else {
-            r.append("1. Identify the exact failed function.\n");
-            r.append("2. Confirm the station-specific approved circuit/interface.\n");
-            r.append("3. Trace indoor-to-outdoor correspondence.\n");
-            r.append("4. Record measured values and equipment status.\n");
-        }
-
-        r.append("\nCONFIGURATION-AWARE CHECK\n");
-        if (il.contains("RRI") || il.contains("PI")) {
-            r.append("Relay/interlocking circuit tracing should use the approved station drawing.\n");
-        } else if (il.startsWith("EI")) {
-            r.append("Prioritise approved EI diagnostic information, I/O status and event logs.\n");
-        } else {
-            r.append("Interlocking type must be confirmed before making a system-specific conclusion.\n");
-        }
-
-        if (rl.contains("K-Series") || rl.contains("WKR")) {
-            r.append("Relay family information is available; exact relay designation and circuit function must still be verified from the approved drawing.\n");
-        } else if (rl.contains("No relay")) {
-            r.append("Relay information is unavailable; do not assume a relay type or function.\n");
-        }
-
-        r.append("\nFAILURE FORECAST\n");
-        if (hi.length() > 0 || sy.length() > 0) {
-            r.append("A recurring/intermittent pattern can be assessed from the recorded history and symptoms.\n");
-            r.append("Record every occurrence, measured value and corrective action for future trend analysis.\n");
-        } else {
-            r.append("Insufficient historical evidence for a meaningful failure forecast.\n");
-        }
-
-        r.append("\nCORRECTIVE MEASURE\n");
-        r.append("Verify the actual cause before replacing equipment. ");
-        r.append("Use approved testing and maintenance procedures and document the result.\n");
-
-        r.append("\nSAFETY\n");
-        r.append("Never bypass, bridge, short, force or defeat an interlocking or safety function. ");
-        r.append("Use the approved station circuit, control table, Railway instructions, ");
-        r.append("RDSO/CAMTECH guidance and manufacturer documentation.");
-
-        result.setText(r.toString());
-
-            String relayGuidance = getRelayLibraryGuidance(
-                    getStationProfileValue("relay"), ft);
-            if (!relayGuidance.isEmpty()) {
-                result.append("\n\nRELAY LIBRARY REFERENCE\n");
-                result.append(relayGuidance);
-            }
-
-            String cfg = getConfigurationGuidance(ft);
-            if (!cfg.isEmpty()) {
-                TextView cfgView = new TextView(this);
-                cfgView.setText("STATION CONFIGURATION GUIDANCE\\n\\n" + cfg);
-                cfgView.setTextSize(13);
-                cfgView.setTextColor(Color.rgb(35, 45, 58));
-                cfgView.setPadding(20, 18, 20, 18);
-                root.addView(cfgView);
-            }
-    });
-
-    root.addView(scroll, new LinearLayout.LayoutParams(
-        LinearLayout.LayoutParams.MATCH_PARENT, 0, 1));
-
-    TextView footer = new TextView(this);
-    footer.setText("DEVELOPED BY PRATIK MUKHERJEE (SIM/ASN/ER)");
-    footer.setTextSize(12);
-    footer.setTextColor(Color.rgb(20, 45, 80));
-    footer.setGravity(Gravity.CENTER);
-    footer.setPadding(0, 10, 0, 4);
-    root.addView(footer);
-
-    setContentView(root);
-}
-
-    private void saveStationProfileData(String[] keys, EditText[] fields) {
-        android.content.SharedPreferences sp =
-                getSharedPreferences("station_profile", MODE_PRIVATE);
-        android.content.SharedPreferences.Editor e = sp.edit();
-
-        for (int i = 0; i < keys.length && i < fields.length; i++) {
-            e.putString(keys[i], fields[i].getText().toString().trim());
-        }
-
-        e.apply();
-    }
-
-    private String getStationProfileValue(String key) {
-        return getSharedPreferences("station_profile", MODE_PRIVATE)
-                .getString(key, "");
-    }
-
-void startFaultDiagnosis() {
-        android.content.SharedPreferences sp=getSharedPreferences("station_profile",MODE_PRIVATE);
-        String station=sp.getString("station","");
-        String interlocking=sp.getString("interlocking","");
-        String relay=sp.getString("relay","");
-        if(station.isEmpty() || interlocking.isEmpty()) {
-            new AlertDialog.Builder(this)
-                .setTitle("STATION PROFILE REQUIRED")
-                .setMessage("First enter Station Name/Code and Interlocking Type (PI/RRI/EI) in STATION PROFILE.")
-                .setNegativeButton("CLOSE",null)
-                .setPositiveButton("OPEN PROFILE",(d,w)->showStationProfile()).show();
-            return;
-        }
-        final String[] faults={
-            "Signal not clearing",
-            "Point not moving / detection fault",
-            "Track circuit / axle counter fault",
-            "EI / interlocking fault",
-            "BPAC / HASSDAC / UFSBI fault",
-            "KAVACH / TCAS fault",
-            "Other S&T fault"
-        };
-        new AlertDialog.Builder(this)
-            .setTitle("STEP 1 - SELECT FAULT")
-            .setItems(faults,(d,which)->askFaultLocation(faults[which],station,interlocking,relay))
-            .setNegativeButton("CANCEL",null).show();
-    }
-
-    void askFaultLocation(String fault,String station,String interlocking,String relay) {
-        final String[] locations={
-            "Indoor / Relay Room / EI Room",
-            "Outdoor / Location Box / Field",
-            "Both indoor and outdoor",
-            "Not sure yet"
-        };
-        new AlertDialog.Builder(this)
-            .setTitle("STEP 2 - WHERE IS THE SYMPTOM?")
-            .setMessage("Station: "+station+"\nSystem: "+interlocking+"\nRelay profile: "+relay)
-            .setItems(locations,(d,which)->askFaultIndication(fault,locations[which],station,interlocking,relay))
-            .setNegativeButton("BACK",(d,w)->startFaultDiagnosis()).show();
-    }
-
-    void askFaultIndication(String fault,String location,String station,String interlocking,String relay) {
-        final EditText input=new EditText(this);
-        input.setHint("Example: S1 not clearing / point 101 stuck Normal / section occupied");
-        input.setSingleLine(false);
-        input.setMinLines(3);
-        new AlertDialog.Builder(this)
-            .setTitle("STEP 3 - EXACT SYMPTOM / INDICATION")
-            .setMessage("Fault: "+fault+"\nLocation: "+location+"\n\nEnter the exact panel/VDU, relay-room or outdoor indication.")
-            .setView(input)
-            .setNegativeButton("BACK",(d,w)->askFaultLocation(fault,station,interlocking,relay))
-            .setPositiveButton("ANALYSE",(d,w)->showDiagnosisResult(fault,location,input.getText().toString().trim(),station,interlocking,relay))
-            .show();
-    }
-
-    void showDiagnosisResult(String fault,String location,String symptom,String station,String interlocking,String relay) {
-        String path;
-        if(fault.startsWith("Signal")) {
-            path="SIGNAL PATH\nPanel/VDU -> route conditions -> track detection -> point detection -> signal control -> relay/EI output -> relay room -> location box -> outdoor signal -> field correspondence.";
-        } else if(fault.startsWith("Point")) {
-            path="POINT PATH\nPanel command -> interlocking permission -> control relay/output -> approved circuit -> location box -> point machine -> control/motor supply -> movement -> detection -> NWKR/RWKR or equivalent -> panel correspondence.";
-        } else if(fault.startsWith("Track")) {
-            path="DETECTION PATH\nPanel section status -> detection point/field unit -> evaluator -> communication -> relay/interface -> event log -> field correspondence -> authorised reset conditions.";
-        } else if(fault.startsWith("EI")) {
-            path="EI PATH\nEI make/model/version -> diagnostic/alarm -> affected function -> power/status -> approved I/O/interface -> communication -> field equipment -> event log.";
-        } else if(fault.startsWith("BPAC")) {
-            path="BLOCK PATH\nBoth-end indications -> block interface -> communication -> equipment health -> relay/interface -> event log -> authorised block procedure -> field correspondence.";
-        } else if(fault.startsWith("KAVACH")) {
-            path="KAVACH PATH\nLoco ID/version -> onboard status -> radio -> RFID/location -> signalling interface -> diagnostic log -> trackside correspondence.";
-        } else {
-            path="GENERAL S&T PATH\nSymptom -> applicable system -> approved circuit/interface -> indoor equipment -> location box/interface -> outdoor equipment -> field correspondence -> first abnormal condition.";
-        }
-        String relayNote=relay.isEmpty()
-            ? "\nRelay family is not recorded. Do not assume relay type or designation."
-            : "\nRecorded relay profile: "+relay+". Exact relay/contact function must still be verified from the approved station circuit.";
-        String result=
-            "DIAGNOSTIC SUMMARY\n\n"+
-            "Station: "+station+"\n"+
-            "System: "+interlocking+"\n"+
-            "Fault: "+fault+"\n"+
-            "Location: "+location+"\n"+
-            "Reported indication: "+(symptom.isEmpty()?"Not entered":symptom)+"\n\n"+
-            path+relayNote+
-            "\n\nNEXT CHECK\nFind the first condition in this chain that does not correspond with the approved circuit/control table or actual field equipment. Record the observation before changing anything."+
-            "\n\nIF UNCERTAIN\nUpload the relevant approved circuit/control table, panel/VDU image, relay-room indication, location-box/field circuit or equipment diagnostic screen."+
-            "\n\nSAFETY\nNever bypass, bridge, force, short or defeat an interlocking/safety function. Follow authorised Railway and manufacturer procedures.";
-        showTechnicalModule("FAULT DIAGNOSIS",result);
-    }
-
-    void showModule(String title,String description) {
-
-        if ("STATION PROFILE".equals(title)) {
-            showStationProfile();
-            return;
-        }
-
-        if ("FAULT FINDER".equals(title)) {
-            showStationAwareFaultFinder();
-            return;
-
-
-        }
-
-        if ("RELAY & EQUIPMENT LIBRARY".equals(title)) {
-            showRelayLibrary();
-            return;
-        }
-        if ("ELECTRONIC INTERLOCKING".equals(title)) {
-            showTechnicalModule("ELECTRONIC INTERLOCKING",
-                "ELECTRONIC INTERLOCKING — FIELD GUIDE\n\n" +
-                "1. BASIC ARCHITECTURE\nEI uses application logic to establish interlocking conditions and interfaces with field equipment. A typical architecture contains vital logic, vital inputs/outputs, non-vital indications/alarms and diagnostic facilities. Exact architecture depends on the approved manufacturer and system version.\n\n" +
-                "2. VITAL FUNCTIONS\nVital functions include safety-critical proving and control such as signal and point control. Safety-related application logic must be treated according to the approved EI design and application data.\n\n" +
-                "3. NON-VITAL FUNCTIONS\nLocal indications, alarms, diagnostic information and certain external interfaces may be non-vital. Never assume that an indication is vital or non-vital without checking the approved system documentation.\n\n" +
-                "4. FIELD INTERFACES\nTypical interfaces may include signal outputs, point-control interfaces, track-related inputs, detection inputs, level-crossing interfaces and communication with other signalling equipment. The actual interface arrangement is manufacturer/model specific.\n\n" +
-                "5. DIAGNOSTICS\nWhen an EI failure occurs, first record the exact alarm, diagnostic code, affected equipment/function and time. Do not reset repeatedly without recording the evidence.\n\n" +
-                "6. FAULT FINDER\nEI function failed → record diagnostic/alarm → identify affected signal/point/track → check corresponding field indication → check approved input/output/interface → check communication/power condition → compare redundant/system status where applicable → identify the first abnormal condition.\n\n" +
-                "7. TESTING\nFunctional testing verifies application logic and correspondence with actual connected equipment. FAT and SAT are part of the approved EI testing process. Testing must follow the authorised test procedure and approved control/selection table.\n\n" +
-                "8. WHAT SHOULD I UPLOAD?\nFor detailed diagnosis upload the EI make/model/version, exact diagnostic screen or alarm, relevant approved interface/application document, control table and—where applicable—the field circuit or equipment drawing.\n\n" +
-                "SAFETY\nNever bypass a vital function, force an output or repeatedly reset an EI to clear a fault without following the authorised procedure. The approved EI manual, application data, Railway instructions and manufacturer documentation take precedence over this reference guide.");
-            return;
-        }
-
-        if ("RRI / PANEL".equals(title)) {
-            showTechnicalModule("RRI / PANEL",
-                "RRI / PANEL FIELD GUIDE\n\n" +
-                "PANEL → RELAY ROOM → FIELD CORRESPONDENCE\n\n" +
-                "1. PANEL INDICATION\nRecord the exact signal, point, track, route or crank-handle indication before troubleshooting.\n\n" +
-                "2. ROUTE SETTING\nRequired conditions, point positions, detection and locking must be proved before the relevant signal can clear. Exact logic is installation-specific.\n\n" +
-                "3. ROUTE LOCKING\nOnce established, the route remains protected until the authorised release conditions are satisfied.\n\n" +
-                "4. APPROACH LOCKING\nApproach locking protects against unsafe route alteration after the relevant approach condition is established. Exact release logic must be checked from the approved circuit.\n\n" +
-                "5. FAULT FINDER — SIGNAL NOT CLEARING\nCheck: track indications → point positions → point detection → conflicting route/signal conditions → route locking → approach locking → relay-room correspondence → first missing condition in the approved circuit.\n\n" +
-                "6. WHAT CIRCUIT SHOULD I UPLOAD?\nFor detailed diagnosis upload the approved Control Table/Route Chart, Signal Control Circuit, Point Control & Detection Circuit and Route/Approach Locking Circuit. A relay-room shelf/rack drawing may also be required.\n\n" +
-                "SAFETY\nNever bypass or bridge an interlocking/safety circuit to restore an indication. Follow the approved station circuit, control table, SEM/Railway instructions and authorised maintenance procedure.");
-            return;
-        }
-
-        if ("SIGNAL & POINT".equals(title)) {
-            showTechnicalModule(
-                "SIGNAL & POINT",
-                "POINT OPERATION & DETECTION\n\n" +
-                "1. OPERATOR COMMAND\n" +
-                "Normal/Reverse command is initiated from the approved panel/VDU/control system.\n\n" +
-                "2. INTERLOCKING CHECK\n" +
-                "The interlocking must permit the point operation. Existing route/track/crank-handle/other locking conditions are proved according to the approved circuit.\n\n" +
-                "3. CONTROL CIRCUIT\n" +
-                "The appropriate point control output operates the point-control/contactor circuit.\n\n" +
-                "4. POINT MACHINE\n" +
-                "The point machine moves the switch rails towards the commanded position.\n\n" +
-                "5. DETECTION\n" +
-                "After the point reaches the required position, the corresponding detection is obtained.\n\n" +
-                "6. RELAY-ROOM PROVING\n" +
-                "Typical relay-based schemes use NWKR for Normal detection and RWKR for Reverse detection. Exact circuit implementation must be checked against the station's approved drawing.\n\n" +
-                "7. CORRESPONDENCE\n" +
-                "The indication should correspond to the actual point position. A mismatch or flashing/out-of-correspondence indication must be treated as a fault condition until properly verified.\n\n" +
-                "FAULT FINDER — POINT NOT GOING REVERSE\n\n" +
-                "Panel/VDU → command indication → control relay/output → location-box/control supply → point machine operation → detection at site → RWKR indication → correspondence/proving.\n\n" +
-                "CHECK IN THIS ORDER\n" +
-                "• What exactly does the panel show?\n" +
-                "• Is the point currently Normal or Reverse?\n" +
-                "• Is the point free from route/track/crank-handle locking?\n" +
-                "• Is the Reverse control command reaching the approved control circuit?\n" +
-                "• Is the location-box supply healthy?\n" +
-                "• Does the machine actually operate?\n" +
-                "• Is Reverse detection obtained at site?\n" +
-                "• Is RWKR picking up in the relay room?\n" +
-                "• Does the indication correspond with the physical point position?\n\n" +
-                "IMPORTANT: Never bypass, bridge or alter a safety circuit merely to restore indication. Follow the approved station circuit, Railway instructions and authorised disconnection/reconnection procedure."
-            );
-            return;
-        }
-
-        if ("RELAY & CIRCUITS".equals(title)) {
-            showTechnicalModule(
-                "RELAY & CIRCUITS",
-                "RELAY BASICS\n\n" +
-                "PICKED / ENERGISED = relay coil is energised and its contacts are in the corresponding picked condition.\n\n" +
-                "DROPPED / DE-ENERGISED = relay coil is not energised and its contacts are in the corresponding dropped condition.\n\n" +
-                "FRONT CONTACT = contact which is closed in the relay's picked condition.\n\n" +
-                "BACK CONTACT = contact which is closed in the relay's dropped condition.\n\n" +
-                "COMMON FIELD METHOD\n" +
-                "Do not start by randomly checking relays. Start from the observed symptom and trace the approved circuit from source → controlling condition → relay coil → contact → next stage.\n\n" +
-                "POINT-RELATED RELAYS\n\n" +
-                "WLR — Point electrically-locking function in typical relay-interlocking schemes. Its exact energisation/drop sequence is circuit dependent.\n\n" +
-                "NWKR — Normal point indication relay in typical schemes. It proves Normal detection when the relevant conditions are satisfied.\n\n" +
-                "RWKR — Reverse point indication relay in typical schemes. It proves Reverse detection when the relevant conditions are satisfied.\n\n" +
-                "WNKR / WRKR — Point-location detection relays used in typical relay schemes to convey Normal/Reverse detection from the point location.\n\n" +
-                "WNR / WRR — Point-control relay designations found in relay-interlocking schemes; exact function and circuit position must be verified from the approved circuit for that installation.\n\n" +
-                "SIGNAL / ROUTE RELAY LOGIC\n\n" +
-                "A signal is not cleared merely because the signal command exists. Route conditions, point position, track conditions, locking and other interlocking conditions are proved according to the approved control table/circuit.\n\n" +
-                "HPR / DPR / ECR\n\n" +
-                "These abbreviations must NOT be assigned a universal function from the letters alone. Different signalling schemes/manufacturer drawings can use relay designations differently. The app will therefore require the approved circuit/drawing before giving a safety-critical interpretation.\n\n" +
-                "RELAY FAULT TRACING\n\n" +
-                "1. Identify the failed function.\n" +
-                "2. Identify the expected relay state from the approved circuit.\n" +
-                "3. Check whether the coil is receiving the required authorised feed.\n" +
-                "4. If the coil is healthy, trace the relevant contact onward.\n" +
-                "5. Check the next relay/input/output condition.\n" +
-                "6. Compare indoor indication with field condition.\n" +
-                "7. Record the actual measurement and relay state before changing anything.\n\n" +
-                "SAFETY RULE\n" +
-                "A relay abbreviation, colour, voltage or contact number shown here is reference information only. The station-specific approved circuit and authorised Railway procedure always take precedence."
-            );
-            return;
-        }
-
-        String warning =
-            description +
-            "\\n\\nFIELD SAFETY NOTE\\n" +
-            "This is a reference and decision-support tool. For safety-critical work always follow the approved station-specific circuit, Railway instructions, RDSO/CAMTECH guidance and the equipment manufacturer's approved manual.";
-
-        showTechnicalModule(title, warning);
-    }
-
-    void showTechnicalModule(String title,String message) {
+    private void addHero(String h,String sub){
         LinearLayout box=new LinearLayout(this);
         box.setOrientation(LinearLayout.VERTICAL);
-        box.setPadding(dp(8),dp(4),dp(8),dp(4));
+        box.setPadding(dp(16),dp(14),dp(16),dp(14));
+        box.setBackground(round(NAVY,0,0,0,0,16));
+        box.addView(text(h,20,Color.WHITE,true));
+        box.addView(text(sub,12,Color.rgb(210,225,240),false));
+        LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(-1,-2);
+        p.bottomMargin=dp(12);
+        content.addView(box,p);
+    }
 
-        ScrollView sv=new ScrollView(this);
-        TextView t=text(message,14,false);
-        t.setTextColor(Color.rgb(45,55,68));
-        t.setPadding(dp(8),dp(8),dp(8),dp(8));
-        sv.addView(t);
+    private void section(String h,String body){
+        LinearLayout c=new LinearLayout(this);
+        c.setOrientation(LinearLayout.VERTICAL);
+        c.setPadding(dp(14),dp(12),dp(14),dp(12));
+        c.setBackground(round(Color.WHITE,1,Color.rgb(218,226,235),0,0,14));
+        c.addView(text(h,15,NAVY,true));
+        TextView b=text(body,12,TEXT,false);
+        b.setPadding(0,dp(8),0,0);
+        c.addView(b);
+        LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(-1,-2);
+        p.bottomMargin=dp(10);
+        content.addView(c,p);
+    }
 
-        box.addView(sv,new LinearLayout.LayoutParams(-1,0,1));
+    private void bullet(String h,String body){
+        section("• "+h,body);
+    }
 
-        TextView footer=text(
-            "DEVELOPED BY PRATIK MUKHERJEE (SIM/ASN/ER)",
-            10,true);
-        footer.setGravity(Gravity.CENTER);
-        footer.setTextColor(Color.rgb(15,72,105));
-        footer.setPadding(0,dp(10),0,dp(4));
-        box.addView(footer);
+    private void genericContent(Module m){
+        section("Overview",
+                m.desc+"\n\nUse the approved station drawing, circuit diagram and equipment manual for exact values, wiring and adjustment limits.");
+        section("Field Checks",
+                "1. Confirm the symptom at the panel/VDU.\n2. Identify the affected equipment and location.\n3. Check supply and indications.\n4. Trace the approved circuit from indoor equipment towards the field.\n5. Record observations before restoration.");
+        section("Common Fault Approach",
+                "Symptom → indication → supply → interface → relay/logic → cable → field equipment → physical condition.");
+        section("Safety",
+                "Do not bypass vital circuits or interlocking. Follow approved maintenance instructions, testing procedures and railway safety rules.");
+    }
 
-        new AlertDialog.Builder(this)
-            .setTitle(title)
-            .setView(box)
-            .setPositiveButton("CLOSE",null)
-            .show();
+    private void relayContent(){
+        section("Relay Fundamentals","A signalling relay provides electrical logic/interface while maintaining fail-safe behaviour. Always identify the exact approved circuit before interpreting a relay designation.");
+        bullet("Picked / Dropped","Picked = relay energised. Dropped = relay de-energised. Actual logic depends on the approved circuit.");
+        bullet("Contacts","Front and back contacts are used to establish or interrupt circuit paths. Never assume a contact function from the relay name alone.");
+        bullet("Important Relays","WLR, NWKR, RWKR, WNKR, WRKR, WNR, WRR, HPR, DPR and ECR may occur in different applications. Verify station-specific function from the circuit.");
+        bullet("Fault Tracing","Start from the symptom, check supply, fuse/MCB, relay energisation, contact condition, wiring/termination and downstream equipment.");
+        section("Typical Checks","Relay indication → coil supply → contact output → cable continuity/insulation where applicable → receiving equipment.");
+        section("Safety","Never short, bridge or force a vital relay/contact for normal operation. Use approved testing procedure and authorised isolation.");
+    }
+
+    private void signalPointContent(){
+        section("Signal","Signal aspect is governed by the interlocking logic, route conditions and relevant detection/locking conditions. Check the approved control table and circuit.");
+        section("Point","Point operation includes command, motor operation, physical movement, detection and correspondence.");
+        section("Detection","Normal and reverse detection must correspond with the actual point position before the interlocking can permit the relevant route.");
+        section("Fault Path","Panel/VDU indication → route condition → point command → relay/EI output → location box → point machine → detection → return indication.");
+        section("Safety","Do not defeat detection, locking or correspondence. Any adjustment must follow the approved maintenance manual.");
+    }
+
+    private void pointContent(){
+        section("Operation","Typical sequence: command → control circuit → point machine motor → mechanical movement → detection → correspondence → indication.");
+        bullet("Normal / Reverse","Verify commanded position, actual tongue position, detection and panel/VDU indication.");
+        bullet("Detection","Check NWKR/RWKR or equivalent detection interface as applicable to the installation.");
+        bullet("Common Faults","Point not moving, moves only one direction, no detection, intermittent detection, correspondence failure, abnormal indication.");
+        bullet("Field Tracing","Panel/VDU → relay/EI interface → cable → location box → point machine → motor/gear/mechanical portion → detection contacts.");
+        section("Adjustment","Exact stroke, contact adjustment, voltage/current and mechanical limits are equipment-specific. Use the approved point-machine manual; do not use generic values.");
+        section("Safety","Ensure required protection/isolation before working on point machine or moving parts.");
+    }
+
+    private void signalLedContent(){
+        section("LED Signal","LED signal units provide the optical aspect. Different approved designs may have different modules, connectors and monitoring arrangements.");
+        section("Checks","Aspect at panel/VDU → lamp proving/monitoring → supply → LED unit → connector/termination → cable.");
+        section("Common Faults","Aspect not displaying, wrong aspect indication, intermittent LED, lamp proving failure, cable/termination fault.");
+        section("Maintenance","Inspect mounting, lens/hood, wiring, connectors and indication. Follow the approved LED signal maintenance instruction.");
+    }
+
+    private void trackContent(){
+        section("Track Circuit","A track circuit detects the occupied/clear condition of a defined rail section using an approved electrical arrangement.");
+        section("Main Elements","Track feed/evaluator → rail section → insulated joints/bonds → relay/evaluator end → indication/interlocking interface.");
+        section("Fault Approach","Check indication → supply/feed → relay/evaluator → track leads → rail bonds → insulated joints → rail condition.");
+        section("Common Faults","False occupied, failure to clear, intermittent occupancy, low insulation, broken/poor bond, joint problem.");
+        section("Safety","Railway track and signalling circuits are safety-critical. Do not bypass a track circuit to obtain a clear indication.");
+    }
+
+    private void jointContent(){
+        section("Insulated Rail Joints","Insulated joints electrically separate adjacent track-circuit sections. Joint design depends on the approved rail and signalling arrangement.");
+        bullet("Block Joint","Used to separate block/track circuit sections as specified for the installation.");
+        bullet("Insulated Joint","Provides electrical separation between rail sections while maintaining mechanical continuity.");
+        bullet("Glued Insulated Joint","A bonded insulated rail joint using an approved adhesive/fibreglass assembly; inspect for mechanical and electrical integrity.");
+        bullet("Checks","Joint condition → insulation → rail connections → bonds → track-circuit indication → leakage/shorting possibility.");
+        section("Reference","For exact joint construction, dimensions and maintenance limits use the applicable RDSO/approved Engineering and S&T joint manual.");
+    }
+
+    private void cableContent(){
+        section("Signalling Cable","Signalling cables carry vital and non-vital circuits between relay room, equipment room, location boxes and field equipment.");
+        section("Field Checks","Identify cable → verify core/tag → termination condition → continuity → insulation resistance where authorised → route/joint condition.");
+        section("Common Faults","Open core, short between cores, earth fault, low insulation, damaged sheath, loose termination, water ingress.");
+        section("Cable Fault Tracing","Divide the route into sections and test systematically rather than disturbing multiple terminations at once.");
+        section("Safety","Use the approved cable schedule and testing procedure. Do not disturb unidentified vital cores.");
+    }
+
+    private void ipsContent(){
+        section("IPS – Integrated Power Supply","IPS supports signalling loads through regulated power conversion, batteries and protection arrangements. Exact architecture varies by approved system.");
+        section("Main Blocks","Incoming supply → protection/changeover → charger/SMPS → battery → distribution → signalling loads.");
+        section("Checks","Input supply → protection → charger status → battery voltage/health → DC/AC outputs → load current → alarms.");
+        section("Common Faults","Mains failure, charger fault, battery low, overload, output missing, alarm indication, changeover problem.");
+        section("Safety","Battery and power circuits can carry hazardous energy. Follow electrical isolation and approved IPS maintenance instructions.");
+    }
+
+    private void lcContent(){
+        section("L/C Gate","Signalling equipment at a level crossing may include gate control, locking, detection, communication and warning interfaces.");
+        bullet("ELB / MLB","Exact equipment configuration is installation-specific. Identify the approved type and circuit before troubleshooting.");
+        bullet("Locking","Check gate status, approach/back locking and the interlocking condition as applicable.");
+        bullet("Warning","Verify bell/buzzer, visual indication and communication arrangements where provided.");
+        section("Fault Approach","Gate indication → supply → control/interface → field equipment → gate position/locking → return indication.");
+        section("Safety","Never defeat gate protection or interlocking to restore normal indication.");
+    }
+
+    private void autoContent(){
+        section("Automatic Signalling","Automatic signalling divides the railway into controlled sections and uses train detection to control successive signal aspects.");
+        section("Core Chain","Train detection → section status → interlocking/automatic logic → signal aspect → following section protection.");
+        section("Equipment","Depending on installation: track circuits, axle counters, automatic signal units, relays/EI, power and communication equipment.");
+        section("Fault Finding","Identify affected section → check detection status → signal indication → relay/EI status → field equipment → cable/power.");
+        section("Safety","Never manually create a clear condition or bypass train detection.");
+    }
+
+    private void axleContent(){
+        section("MSDAC / Axle Counter","Axle-counting systems determine section occupancy from axle detection points and an evaluator/processor.");
+        section("Main Elements","Detection points/sensors → evaluator → communication/interface → section indication → interlocking.");
+        section("Faults","Section occupied, failure to clear, detector fault, communication fault, evaluator alarm, reset requirement.");
+        section("Diagnosis","Read diagnostic indication → identify section/detection point → check supply/communication → inspect field equipment → follow approved reset procedure.");
+        section("Safety","Reset procedures are system-specific and must be performed only under authorised operating/maintenance conditions.");
+    }
+
+    private void eiContent(){
+        section("Electronic Interlocking","EI uses computer-based vital logic to implement interlocking functions and interface with field equipment.");
+        section("Architecture","Vital processing → I/O/field interface → relay/solid-state interface → outdoor equipment → diagnostic/event logging.");
+        section("Field Interface","Signals, points, track detection, level crossing, block systems and other approved interfaces may be connected.");
+        section("Diagnostics","Use system diagnostics/event logs to identify module, channel, interface or field-side abnormalities.");
+        section("Fault Approach","Panel/VDU symptom → EI diagnostic → affected I/O → interface → cable → field equipment.");
+        section("Safety","Do not alter vital configuration/data or bypass interlocking. Follow the approved EI maintenance and testing manual.");
+    }
+
+    private void rriContent(){
+        section("RRI / Panel","Relay Route Relay Interlocking uses relay logic to establish safe routes and locking conditions. Panel/VDU provides operator indications and commands.");
+        section("Route Setting","Route request → route conditions → points commanded → detection/correspondence → route locking → signal clearance.");
+        section("Route Locking","Once established, relevant points are protected against conflicting movement until the permitted release conditions are met.");
+        section("Fault Tracing","Panel indication → route condition → point detection → track condition → relay room circuit → field equipment.");
+        section("Useful Documents","Control Table/Route Chart, Signal Control Circuit, Point Control & Detection Circuit, Route/Approach Locking Circuit and relay-room drawings.");
+    }
+
+    private void bpacContent(){
+        section("BPAC / HASSDAC","Block proving systems establish train/section status between stations using approved axle detection and communication arrangements.");
+        section("Main Elements","Axle detection → evaluator/interface → station equipment → communication → block indication/interlocking.");
+        section("Common Issues","Communication failure, axle count mismatch, section occupied, reset requirement, interface indication fault.");
+        section("Fault Approach","Station indication → communication → evaluator → detection point → power → cable/interface.");
+        section("Safety","Follow the approved block working and reset procedure; do not force a clear block condition.");
+    }
+
+    private void ufsbiContent(){
+        section("UFSBI / Block Interface","UFSBI provides a fail-safe interface between block equipment and interlocking/related signalling systems.");
+        section("Concept","Vital input/output exchange → fail-safe interface logic → block status/command → interlocking.");
+        section("Checks","Power → module/interface indication → communication → input/output status → connected block equipment.");
+        section("Safety","Exact terminal/function mapping must be taken from the approved station drawing and UFSBI manual.");
+    }
+
+    private void fireContent(){
+        section("Fire Alarm","Signalling installations may use fire detection and alarm systems for relay rooms, equipment rooms and other protected spaces.");
+        section("Main Functions","Detection → local indication → audible/visual alarm → interface to monitoring arrangement where provided.");
+        section("Checks","Panel status → detector/alarm indication → supply → loop/interface → event history.");
+        section("Maintenance","Keep detectors unobstructed, check alarms as per approved schedule and record tests.");
+    }
+
+    private void outdoorContent(){
+        section("Outdoor Equipment Library","A field maintainer should be able to identify equipment before opening or testing a circuit.");
+        bullet("Signals","Signal post, LED unit, location box, junction/termination arrangement.");
+        bullet("Points","Point machine, detection components, location box, point wiring.");
+        bullet("Track","Track leads, bonds, insulated joints, glued joints, track circuit equipment.");
+        bullet("Axle Counter","Detection points, junction/interface equipment and evaluator connection.");
+        bullet("Level Crossing","Gate equipment, ELB/MLB, warning and communication equipment.");
+        bullet("Power","Outdoor power distribution, batteries/field supply and protection.");
+    }
+
+    private void stationClassContent(){
+        section("Station & Signalling Arrangement","Station classification and signalling arrangement depend on the railway operating pattern and approved scheme.");
+        section("Typical Information to Record","Station code/name, class/category as officially applicable, interlocking type, number of lines, points, signals, detection system, block system, automatic/absolute signalling, KAVACH and level crossings.");
+        section("Important","Do not infer a station's official class from appearance. Record the classification from railway records/approved documents.");
+    }
+
+    private void earthContent(){
+        section("Earthing & Bonding","Proper earthing, bonding and surge protection protect equipment and help maintain reliable signalling operation.");
+        section("Checks","Earth connection → bonding continuity → corrosion/loose termination → surge protection status → approved earth measurement.");
+        section("Important","Exact acceptable resistance/measurement depends on the applicable railway standard and installation. Use the approved specification rather than a generic number.");
+    }
+
+    private void toolkitContent(){
+        section("Before Attending a Fault","Know the affected signal/point/track/section, recent history, panel indication and relevant circuit/drawing.");
+        section("Field Checklist","Safety protection → identify equipment → verify symptom → check supply → inspect connections → test systematically → restore → verify normal operation → record.");
+        section("Useful Records","Fault time, equipment ID, indication, measurements, action taken, replacement, restoration time and recurrence.");
+        section("Golden Rule","Never replace or adjust a component merely because its name appears in the fault description. Confirm the circuit and symptom first.");
+    }
+
+    private void jeContent(){
+        section("JE / SSE Field Review","Use this screen for supervisory checks and maintenance review.");
+        section("Daily Review","Pending faults → repeated failures → equipment overdue for attention → safety observations → temporary arrangements → material requirement.");
+        section("Fault Review","What failed? Where? Why? Was it intermittent? What was measured? What was replaced? Did the same fault recur?");
+        section("Documentation","Maintain clear records and refer to approved drawings, maintenance manuals and inspection schedules.");
+    }
+
+    private void sourceContent(){
+        section("Reference Sources","Use current approved railway documents for exact technical requirements.");
+        bullet("RDSO / CAMTECH","Handbooks, maintenance instructions, technical specifications and safety guidance.");
+        bullet("Approved Equipment Manual","Make/model-specific installation, adjustment, testing and maintenance instructions.");
+        bullet("Station Drawings","Control table, circuit diagrams, cable plan, location box wiring, relay-room drawings and equipment layout.");
+        section("Important","This app is a field reference. Where an approved railway instruction conflicts with a generic explanation here, the approved instruction governs.");
+    }
+
+    private void showFaultFinder(){
+        baseScreen("Fault Finder");
+        addHero("FIELD FAULT DIAGNOSIS","Select the symptom and follow a structured checking path.");
+
+        String[] faults={
+            "Signal not clearing / Signal at ON",
+            "Wrong signal aspect",
+            "Point not operating",
+            "Point not detected / correspondence failure",
+            "Track circuit / axle counter fault",
+            "Route not setting / route locking",
+            "EI / RRI / Panel fault",
+            "MSDAC / BPAC / UFSBI fault",
+            "KAVACH related issue",
+            "IPS / power failure",
+            "L/C Gate fault",
+            "Cable / insulation fault"
+        };
+
+        for(String f:faults){
+            TextView b=buttonRow("⚠  "+f);
+            b.setOnClickListener(v->faultFlow(f));
+            content.addView(b);
+        }
+    }
+
+    private TextView buttonRow(String s){
+        TextView b=text(s+"   ›",14,TEXT,true);
+        b.setGravity(Gravity.CENTER_VERTICAL);
+        b.setPadding(dp(14),0,dp(10),0);
+        b.setBackground(round(Color.WHITE,1,Color.rgb(215,225,235),0,0,12));
+        LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(-1,dp(52));
+        p.bottomMargin=dp(8);
+        content.addView(b,p);
+        return b;
+    }
+
+    private void faultFlow(String f){
+        baseScreen(f);
+        addHero("CHECKING PATH","Use the approved circuit/drawing and applicable safety procedure.");
+
+        String[] steps;
+        if(f.contains("Signal")) steps=new String[]{
+            "Confirm exact signal identity and aspect indication.",
+            "Check route setting and route locking conditions.",
+            "Verify point operation and detection/correspondence.",
+            "Check track circuit / axle counter status.",
+            "Check relevant relay/EI diagnostic and control circuit.",
+            "Trace towards location box, cable and signal equipment.",
+            "Restore and verify the complete route/signal sequence."
+        };
+        else if(f.contains("Point")) steps=new String[]{
+            "Confirm commanded Normal/Reverse position.",
+            "Check panel/VDU command and indication.",
+            "Check point control output and relay/EI interface.",
+            "Check cable/termination and location box.",
+            "Check point machine supply and operation.",
+            "Check mechanical movement and detection.",
+            "Verify correspondence after restoration."
+        };
+        else steps=new String[]{
+            "Confirm the exact affected equipment/section.",
+            "Record the symptom and indication before disturbing anything.",
+            "Check approved power supply and protection.",
+            "Check interface/relay/EI/communication status.",
+            "Check cable, termination and field equipment.",
+            "Follow the equipment-specific diagnostic procedure.",
+            "Verify normal operation and record the action taken."
+        };
+
+        int n=1;
+        for(String s:steps){
+            LinearLayout row=new LinearLayout(this);
+            row.setGravity(Gravity.CENTER_VERTICAL);
+            TextView num=text(String.valueOf(n++),16,Color.WHITE,true);
+            num.setGravity(Gravity.CENTER);
+            num.setBackground(round(Color.rgb(18,145,95),0,0,0,0,20));
+            row.addView(num,new LinearLayout.LayoutParams(dp(38),dp(38)));
+            row.addView(text(s,13,TEXT,false),new LinearLayout.LayoutParams(0,-2,1));
+            LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(-1,-2);
+            p.bottomMargin=dp(10);
+            content.addView(row,p);
+        }
+
+        section("Safety","Do not bypass vital conditions, short contacts, force detection or create a false clear indication. Follow authorised railway procedures.");
+    }
+
+    private void showRelayLibrary(){
+        baseScreen("Relay & Equipment Library");
+        addHero("S&T EQUIPMENT REFERENCE","Select an item for its field-use summary.");
+
+        String[][] data={
+            {"WKR","Point detection / correspondence","Verify exact function from approved circuit."},
+            {"NWKR","Normal detection relay","Normal position detection; station-specific circuit."},
+            {"RWKR","Reverse detection relay","Reverse position detection; station-specific circuit."},
+            {"WLR","Point/route related relay","Function depends on approved interlocking circuit."},
+            {"WNKR / WRKR","Point control logic","Verify exact circuit and interlocking application."},
+            {"WNR / WRR","Relay designation","Do not infer function from letters alone."},
+            {"HPR / DPR / ECR","Relay logic/interface","Verify from approved circuit and equipment documentation."},
+            {"K-50 / K-series","Plug-in relay family","Exact application depends on approved design."}
+        };
+
+        for(String[] x:data){
+            LinearLayout c=new LinearLayout(this);
+            c.setOrientation(LinearLayout.VERTICAL);
+            c.setPadding(dp(14),dp(12),dp(14),dp(12));
+            c.setBackground(round(Color.WHITE,1,Color.rgb(215,225,235),0,0,14));
+            c.addView(text(x[0],17,NAVY,true));
+            c.addView(text(x[1],12,BLUE,true));
+            c.addView(text(x[2],11,MUTED,false));
+            LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(-1,-2);
+            p.bottomMargin=dp(8);
+            content.addView(c,p);
+        }
+    }
+
+    private void showStationProfile(){
+        baseScreen("Station Profile");
+        addHero("STATION S&T DATABASE","Save the configuration of your station for faster fault diagnosis.");
+
+        String[] labels={
+            "Station Name / Code","Station Class","Interlocking Type","EI Make / Model / Version",
+            "Number of Lines","Number of Points","Number of Signals","Track Detection",
+            "Block System","Automatic / Absolute Signalling","Point Machine Make / Type",
+            "IPS / Power Arrangement","KAVACH / TCAS","L/C Gates","Remarks"
+        };
+
+        for(String l:labels){
+            EditText e=new EditText(this);
+            e.setHint(l);
+            e.setTextSize(13);
+            e.setSingleLine(false);
+            e.setPadding(dp(12),0,dp(12),0);
+            e.setBackground(round(Color.WHITE,1,Color.rgb(210,220,230),0,0,10));
+            LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(-1,dp(48));
+            p.bottomMargin=dp(7);
+            content.addView(e,p);
+        }
+
+        Button save=new Button(this);
+        save.setText("SAVE STATION PROFILE");
+        save.setTextColor(Color.WHITE);
+        save.setBackground(round(BLUE,0,0,0,0,12));
+        content.addView(save,new LinearLayout.LayoutParams(-1,dp(52)));
+
+        save.setOnClickListener(v->Toast.makeText(this,"Station profile saved for this session.",Toast.LENGTH_SHORT).show());
+    }
+
+    private TextView text(String s,float size,int color,boolean bold){
+        TextView t=new TextView(this);
+        t.setText(s);
+        t.setTextSize(size);
+        t.setTextColor(color);
+        t.setTypeface(Typeface.create("sans-serif",bold?Typeface.BOLD:Typeface.NORMAL));
+        return t;
+    }
+
+    private GradientDrawable round(int fill,int stroke,int strokeColor,int a,int b,int radius){
+        return makeRound(fill,stroke,strokeColor,radius);
+    }
+
+    private GradientDrawable round(int fill,int stroke,int strokeColor,int a,int b,int c,int radius){
+        return makeRound(fill,stroke,strokeColor,radius);
+    }
+
+    private GradientDrawable round(int fill,int stroke,int strokeColor,int a,int b,int c,int d,int radius){
+        return makeRound(fill,stroke,strokeColor,radius);
+    }
+
+    private GradientDrawable makeRound(int fill,int stroke,int strokeColor,int radius){
+        GradientDrawable g=new GradientDrawable();
+        g.setColor(fill);
+        if(stroke>0) g.setStroke(stroke,strokeColor);
+        g.setCornerRadius(dp(radius));
+        return g;
+    }
+
+    private int dp(int n){ return (int)(n*getResources().getDisplayMetrics().density+0.5f); }
+
+    @Override
+    public void onBackPressed(){
+        showHome();
+    }
+
+    public static class SignalArtView extends View {
+        Paint p=new Paint(3);
+        public SignalArtView(Context c){super(c);}
+        protected void onDraw(Canvas c){
+            super.onDraw(c);
+            float d=getResources().getDisplayMetrics().density;
+            p.setStrokeWidth(4*d);
+            p.setColor(Color.LTGRAY);
+            c.drawLine(35*d,8*d,35*d,62*d,p);
+            p.setStrokeWidth(2*d);
+            c.drawLine(23*d,62*d,47*d,62*d,p);
+            p.setStyle(Paint.Style.FILL);
+            p.setColor(Color.rgb(235,55,55));
+            c.drawCircle(35*d,20*d,7*d,p);
+            p.setColor(Color.rgb(70,205,105));
+            c.drawCircle(35*d,39*d,7*d,p);
+            p.setStyle(Paint.Style.STROKE);
+            p.setColor(Color.WHITE);
+            c.drawRect(22*d,7*d,48*d,52*d,p);
+            p.setStyle(Paint.Style.FILL);
+        }
     }
 }

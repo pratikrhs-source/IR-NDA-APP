@@ -1,4 +1,4 @@
-package com.pratik.irndaapp;
+package com.pratik.irsntfieldassistant;
 
 import android.app.*;
 import android.os.Bundle;
@@ -58,7 +58,7 @@ public class MainActivity extends Activity {
         super.onCreate(b);
         sp=getSharedPreferences("nda",0);
         darkMode=sp.getBoolean("dark_mode",false); applyThemeColors();
-        if(isActivated()) showSplash(); else showActivation();
+        if(isActivated()) startActivity(new Intent(this, SntDashboardActivity.class)); else showActivation();
     }
 
     String tr(String s){
@@ -159,14 +159,14 @@ public class MainActivity extends Activity {
         page.setPadding(dp(22),dp(28),dp(22),dp(24));
         page.setBackgroundColor(BG);
 
-        TextView title=tv("IR NDA APP",28,true); title.setTextColor(NAVY); title.setGravity(Gravity.CENTER); page.addView(title,new LinearLayout.LayoutParams(-1,-2));
+        TextView title=tv("IR S&T FIELD ASSISTANT",28,true); title.setTextColor(NAVY); title.setGravity(Gravity.CENTER); page.addView(title,new LinearLayout.LayoutParams(-1,-2));
         TextView sub=tv("LICENSE ACTIVATION",16,true); sub.setTextColor(BLUE); sub.setGravity(Gravity.CENTER); page.addView(sub,new LinearLayout.LayoutParams(-1,-2));
         TextView info=tv("This app requires a one-time offline activation.\nNo internet or account is required.",13,false); info.setGravity(Gravity.CENTER); info.setPadding(0,dp(14),0,dp(16)); page.addView(info,new LinearLayout.LayoutParams(-1,-2));
 
         LinearLayout c=card();
         c.addView(sectionTitle("YOUR DEVICE ID"));
         TextView did=tv(deviceId(),14,true); did.setTextColor(NAVY); did.setGravity(Gravity.CENTER); did.setPadding(dp(10),dp(12),dp(10),dp(12)); did.setBackground(bg(Color.rgb(239,247,255),12)); c.addView(did);
-        Button copy=btn("📋  COPY DEVICE ID"); copy.setOnClickListener(v->{((android.content.ClipboardManager)getSystemService(CLIPBOARD_SERVICE)).setPrimaryClip(android.content.ClipData.newPlainText("IR NDA Device ID",deviceId()));toast("Device ID copied. Send it to the developer.");}); c.addView(copy);
+        Button copy=btn("📋  COPY DEVICE ID"); copy.setOnClickListener(v->{((android.content.ClipboardManager)getSystemService(CLIPBOARD_SERVICE)).setPrimaryClip(android.content.ClipData.newPlainText("IR S&T FIELD ASSISTANT Device ID",deviceId()));toast("Device ID copied. Send it to the developer.");}); c.addView(copy);
         c.addView(tv("Send this Device ID to the developer. You will receive a license key for this phone.",12,false));
         page.addView(c);
 
@@ -189,7 +189,7 @@ public class MainActivity extends Activity {
             }
             sp.edit().putBoolean("license_activated",true).putString("license_device_id",deviceId()).putString("license_key",entered).putString("license_last_date",todayYmd()).apply();
             Toast.makeText(this,"Activation successful.",Toast.LENGTH_LONG).show();
-            showSplash();
+            startActivity(new Intent(this, SntDashboardActivity.class));
         });
         lc.addView(activate);
         page.addView(lc);
@@ -198,33 +198,11 @@ public class MainActivity extends Activity {
         ScrollView sv=new ScrollView(this); sv.addView(page); setContentView(sv);
     }
 
-    void showSplash(){
-        LinearLayout splash=new LinearLayout(this);
-        splash.setOrientation(LinearLayout.VERTICAL);
-        splash.setGravity(Gravity.CENTER);
-        splash.setBackgroundColor(NAVY);
-        getWindow().setStatusBarColor(NAVY);
-        getWindow().setNavigationBarColor(NAVY);
-        if(Build.VERSION.SDK_INT>=19) getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
-        ImageView logo=new ImageView(this);
-        logo.setImageResource(com.pratik.irndaapp.R.drawable.ic_launcher);
-        logo.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-        splash.addView(logo,new LinearLayout.LayoutParams(dp(280),dp(280)));
-        TextView title=tv("IR NDA APP",25,true); title.setTextColor(WHITE); title.setGravity(Gravity.CENTER); splash.addView(title);
-        TextView by=tv("প্রতীক",18,true); by.setTextColor(Color.rgb(240,210,110)); by.setGravity(Gravity.CENTER); splash.addView(by);
-        TextView copyright=tv("© PRATIK MUKHERJEE (SIM/ASN/ER), 2026",11,false); copyright.setTextColor(Color.LTGRAY); copyright.setGravity(Gravity.CENTER); copyright.setPadding(0,dp(14),0,0); splash.addView(copyright);
-        setContentView(splash);
-        handler.postDelayed(()->{
-            if(Build.VERSION.SDK_INT>=19) getWindow().getDecorView().setSystemUiVisibility(0);
-            startActivity(new Intent(this, SntDashboardActivity.class)); finish();
-        },2000);
-    }
-
     void build(){
         ScrollView sv=new ScrollView(this); sv.setFillViewport(true); root=new LinearLayout(this); root.setOrientation(LinearLayout.VERTICAL); root.setBackgroundColor(BG); sv.addView(root); setContentView(sv);
 
         LinearLayout header=new LinearLayout(this); header.setOrientation(LinearLayout.VERTICAL); header.setGravity(Gravity.CENTER); header.setPadding(dp(14),dp(16),dp(14),dp(16)); header.setBackgroundColor(NAVY);
-        TextView h=tv("IR NDA APP",24,true); h.setTextColor(WHITE); h.setGravity(Gravity.CENTER); header.addView(h);
+        TextView h=tv("IR S&T FIELD ASSISTANT",24,true); h.setTextColor(WHITE); h.setGravity(Gravity.CENTER); header.addView(h);
         TextView h2=tv("প্রতীক  •  NIGHT DUTY ALLOWANCE",12,true); h2.setTextColor(Color.rgb(240,210,110)); h2.setGravity(Gravity.CENTER); header.addView(h2); root.addView(header);
 
         TextView sub=tv("Offline • No login • Your entries stay on this phone",12,false); sub.setGravity(Gravity.CENTER); sub.setPadding(5,dp(8),5,dp(8)); root.addView(sub);
@@ -632,7 +610,7 @@ public class MainActivity extends Activity {
                 ContentValues values=new ContentValues();
                 values.put(MediaStore.Downloads.DISPLAY_NAME,fileName);
                 values.put(MediaStore.Downloads.MIME_TYPE,"application/pdf");
-                values.put(MediaStore.Downloads.RELATIVE_PATH,Environment.DIRECTORY_DOWNLOADS+"/IR NDA APP");
+                values.put(MediaStore.Downloads.RELATIVE_PATH,Environment.DIRECTORY_DOWNLOADS+"/IR S&T FIELD ASSISTANT");
                 values.put(MediaStore.Downloads.IS_PENDING,1);
 
                 Uri uri=getContentResolver().insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI,values);
@@ -649,7 +627,7 @@ public class MainActivity extends Activity {
                 lastPdfUri=uri;
             }else{
                 File dir=Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
-                File appDir=new File(dir,"IR NDA APP");
+                File appDir=new File(dir,"IR S&T FIELD ASSISTANT");
                 if(!appDir.exists() && !appDir.mkdirs())throw new IOException("Could not create Downloads folder");
                 File file=new File(appDir,fileName);
                 try(OutputStream out=new FileOutputStream(file)){doc.writeTo(out);}
@@ -657,7 +635,7 @@ public class MainActivity extends Activity {
             }
 
             doc.close();
-            toast("PDF saved in Downloads / IR NDA APP\n"+fileName);
+            toast("PDF saved in Downloads / IR S&T FIELD ASSISTANT\n"+fileName);
         }catch(Exception e){
             toast("PDF save error: "+e.getMessage());
         }
@@ -691,7 +669,7 @@ public class MainActivity extends Activity {
     void restoreData(){ Intent i=new Intent(Intent.ACTION_OPEN_DOCUMENT);i.setType("application/json");i.addCategory(Intent.CATEGORY_OPENABLE);startActivityForResult(i,9002); }
     @Override public void onActivityResult(int requestCode,int resultCode,Intent data){ super.onActivityResult(requestCode,resultCode,data); if(resultCode!=RESULT_OK||data==null||data.getData()==null)return; Uri u=data.getData(); try{ if(requestCode==9001){JSONObject all=new JSONObject();for(Map.Entry<String,?> e:sp.getAll().entrySet()){if(e.getKey().startsWith("license_"))continue; Object v=e.getValue();if(v instanceof Boolean)all.put(e.getKey(),(Boolean)v);else if(v instanceof Integer)all.put(e.getKey(),(Integer)v);else all.put(e.getKey(),String.valueOf(v));}try(OutputStream o=getContentResolver().openOutputStream(u)){o.write(all.toString(2).getBytes("UTF-8"));}toast("Backup saved successfully.");}else if(requestCode==9002){StringBuilder b=new StringBuilder();try(InputStream in=getContentResolver().openInputStream(u);BufferedReader r=new BufferedReader(new InputStreamReader(in,"UTF-8"))){String line;while((line=r.readLine())!=null)b.append(line);}JSONObject all=new JSONObject(b.toString());SharedPreferences.Editor ed=sp.edit();java.util.Iterator<String> it=all.keys(); while(it.hasNext()){String k=it.next(); Object v=all.get(k);if(v instanceof Boolean)ed.putBoolean(k,(Boolean)v);else if(v instanceof Integer)ed.putInt(k,(Integer)v);else ed.putString(k,String.valueOf(v));}ed.apply();darkMode=sp.getBoolean("dark_mode",false);applyThemeColors();build();toast("Backup restored successfully.");}}catch(Exception e){toast("Backup/restore error: "+e.getMessage());}}
 
-    void showAbout(){ new AlertDialog.Builder(this).setTitle("IR NDA APP by PRATIK").setMessage("Version 1.2.8\n\nDeveloped by\nPRATIK MUKHERJEE (SIM/ASN/ER)\n\n© 2026 PRATIK MUKHERJEE\n\nOffline Railway Night Duty Allowance calculator.\nCore calculation works without login or internet.\n\nLicense: offline device-bound activation with validity options.\n\nFormula: (Basic + Basic × DA%) ÷ 200 × NDA Units.").setPositiveButton("OK",null).show(); }
+    void showAbout(){ new AlertDialog.Builder(this).setTitle("IR S&T FIELD ASSISTANT by PRATIK").setMessage("Version 1.2.8\n\nDeveloped by\nPRATIK MUKHERJEE (SIM/ASN/ER)\n\n© 2026 PRATIK MUKHERJEE\n\nOffline Railway Night Duty Allowance calculator.\nCore calculation works without login or internet.\n\nLicense: offline device-bound activation with validity options.\n\nFormula: (Basic + Basic × DA%) ÷ 200 × NDA Units.").setPositiveButton("OK",null).show(); }
 
     void shareLastPdf(){
         try{
@@ -701,7 +679,7 @@ public class MainActivity extends Activity {
             }
             Intent i=new Intent(Intent.ACTION_SEND);
             i.setType("application/pdf");
-            Uri uri=lastPdfUri!=null ? lastPdfUri : FileProvider.getUriForFile(this,"com.pratik.irndaapp.fileprovider",lastPdf);
+            Uri uri=lastPdfUri!=null ? lastPdfUri : FileProvider.getUriForFile(this,"com.pratik.irsntfieldassistant.fileprovider",lastPdf);
             i.putExtra(Intent.EXTRA_STREAM,uri);
             i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             startActivity(Intent.createChooser(i,"Share NDA PDF"));
