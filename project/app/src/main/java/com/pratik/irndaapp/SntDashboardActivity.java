@@ -48,8 +48,11 @@ public class SntDashboardActivity extends Activity {
         {"MAINTAINER TOOLKIT",
          "Multimeter, insulation tester, crimping, ferruling, soldering, relay handling, cable identification and restoration checklists."},
 
+        {"STATION PROFILE",
+         "Save station-specific PI/RRI/EI, relay family, equipment makes and indoor/outdoor configuration."},
+
         {"FAULT FINDER",
-         "Symptom → observations → equipment/make/model → circuit/image → relay/contact/terminal tracing. Never guess safety-critical wiring."},
+         "Profile-aware indoor and outdoor troubleshooting using station-specific system, relay and equipment information."},
 
         {"MANUALS & SOURCES",
          "Railway, RDSO, CAMTECH and manufacturer references with source and page information."},
@@ -180,22 +183,65 @@ public class SntDashboardActivity extends Activity {
         }
     }
 
+    void showStationProfile() {
+        final String[] keys = {"station","interlocking","relay","panel","point_machine","detection","block","kavach","other"};
+        final String[] labels = {"Station Name / Code","Interlocking: PI / RRI / EI","Relay Family / Siemens K-series","Panel / VDU","Point Machine Make / Type","Track Detection / MSDAC / Track Circuit","BPAC / HASSDAC / UFSBI / Block System","KAVACH / TCAS Make and Version","Other Indoor / Outdoor Equipment"};
+        final android.content.SharedPreferences sp = getSharedPreferences("station_profile", MODE_PRIVATE);
+        LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
+        box.setPadding(dp(12),dp(4),dp(12),dp(4));
+        final EditText[] fields = new EditText[keys.length];
+        for(int i=0;i<keys.length;i++) {
+            fields[i]=new EditText(this);
+            fields[i].setHint(labels[i]);
+            fields[i].setSingleLine(false);
+            fields[i].setText(sp.getString(keys[i],""));
+            box.addView(fields[i],new LinearLayout.LayoutParams(-1,dp(52)));
+        }
+        ScrollView sv=new ScrollView(this);
+        sv.addView(box);
+        new AlertDialog.Builder(this)
+            .setTitle("STATION PROFILE")
+            .setMessage("Enter the actual station configuration. Fault Finder will use this profile before diagnosis.")
+            .setView(sv)
+            .setNegativeButton("CANCEL",null)
+            .setPositiveButton("SAVE",(d,w)->{
+                android.content.SharedPreferences.Editor e=sp.edit();
+                for(int i=0;i<keys.length;i++) e.putString(keys[i],fields[i].getText().toString().trim());
+                e.apply();
+                Toast.makeText(this,"Station profile saved.",Toast.LENGTH_SHORT).show();
+            }).show();
+    }
+
+    String stationProfileSummary() {
+        android.content.SharedPreferences sp=getSharedPreferences("station_profile",MODE_PRIVATE);
+        String st=sp.getString("station",""), in=sp.getString("interlocking",""), re=sp.getString("relay",""), pa=sp.getString("panel",""), pm=sp.getString("point_machine",""), de=sp.getString("detection",""), bl=sp.getString("block",""), ka=sp.getString("kavach",""), ot=sp.getString("other","");
+        if(st.isEmpty() && in.isEmpty() && re.isEmpty()) return "STATION PROFILE: Not configured. Complete the profile before installation-specific diagnosis.\n\n";
+        return "ACTIVE STATION PROFILE\nStation: "+st+"\nInterlocking: "+in+"\nRelay: "+re+"\nPanel/VDU: "+pa+"\nPoint Machine: "+pm+"\nDetection: "+de+"\nBlock System: "+bl+"\nKAVACH: "+ka+"\nOther: "+ot+"\n\n";
+    }
+
     void showModule(String title,String description) {
+
+        if ("STATION PROFILE".equals(title)) {
+            showStationProfile();
+            return;
+        }
 
         if ("FAULT FINDER".equals(title)) {
             showTechnicalModule("FAULT FINDER",
-                "S&T FAULT FINDER — FIELD TROUBLESHOOTING\n\n" +
-                "1. FIRST RULE\nRecord the exact symptom, indication, equipment identity, time and operating condition before changing anything.\n\n" +
-                "2. UNIVERSAL FLOW\nSYMPTOM → IDENTIFY EQUIPMENT → RECORD INDICATIONS → CHECK POWER/HEALTH → CHECK INPUTS → CHECK OUTPUTS → TRACE APPROVED CIRCUIT/INTERFACE → FIND FIRST ABNORMAL CONDITION → RECTIFY UNDER AUTHORISED PROCEDURE → TEST AND RECORD.\n\n" +
-                "3. SIGNAL NOT CLEARING\nCheck track indication → point position → point detection → route conditions → conflicting routes → route locking → approach locking → signal control conditions → relay/EI correspondence.\n\n" +
-                "4. POINT NOT MOVING\nRecord panel indication → Normal/Reverse status → control command → control circuit → location box → point machine → detection → NWKR/RWKR or equivalent proving → correspondence.\n\n" +
-                "5. TRACK / AXLE COUNTER FAULT\nRecord affected section → clear/occupied indication → detection points → field unit/evaluator → communication → event log → approved reset conditions.\n\n" +
-                "6. EI FAULT\nRecord exact diagnostic/alarm → affected function → power/status → input/output interface → communication → event log. Do not repeatedly reset without recording evidence.\n\n" +
-                "7. BPAC / UFSBI FAULT\nRecord both ends indications → identify block interface → communication → equipment health → relay/interface indications → event log → authorised block procedure.\n\n" +
-                "8. KAVACH FAULT\nRecord locomotive ID, Kavach version, exact alarm/code → onboard status → radio status → RFID/location → signalling interface → diagnostic log.\n\n" +
-                "9. WHAT SHOULD I UPLOAD?\nUpload a clear panel photo or screenshot, equipment make/model/version, exact fault symptom, relevant approved circuit or interface drawing, diagnostic screen and event log if available.\n\n" +
-                "10. AI DIAGNOSIS RULE\nIf the circuit, indication or equipment identity is unclear, request a clearer image or approved drawing instead of guessing. AI provides decision support only.\n\n" +
-                "SAFETY\nNever bypass, bridge, force, short or defeat a vital safety circuit. Follow the approved station circuit, Railway instructions, manufacturer manual and authorised troubleshooting/restoration procedure.");
+                stationProfileSummary() +
+                "S&T FAULT FINDER — PROFILE-AWARE INDOOR + OUTDOOR TROUBLESHOOTING\n\n" +
+                "1. FIRST STEP\nIdentify station type PI/RRI/EI, relay family, panel/VDU, detection system, block system, equipment makes and indoor/outdoor arrangement before diagnosis.\n\n" +
+                "2. UNIVERSAL FLOW\nSYMPTOM → STATION PROFILE → EQUIPMENT IDENTITY → PANEL/INDICATION → INDOOR LOGIC → APPROVED CIRCUIT → LOCATION BOX/INTERFACE → OUTDOOR EQUIPMENT → FIELD CORRESPONDENCE → FIRST ABNORMAL CONDITION.\n\n" +
+                "3. SIGNAL NOT CLEARING\nTrack detection → point position/detection → route conditions → locking → signal control → relay/EI condition → relay-room correspondence → location box/interface → outdoor signal.\n\n" +
+                "4. POINT NOT MOVING\nPanel command → interlocking permission → applicable control relay/output → approved circuit → location box → outdoor point machine → control/motor supply → detection → applicable NWKR/RWKR or equivalent → panel correspondence.\n\n" +
+                "5. TRACK / AXLE COUNTER\nIdentify installed detection system first. Then section indication → detection points → field unit → evaluator → communication → relay/interface → event log → authorised reset → outdoor correspondence.\n\n" +
+                "6. EI FAULT\nIdentify EI make/model/version → exact alarm → affected function → power/status → approved I/O/interface → communication → field equipment correspondence → event log.\n\n" +
+                "7. RELAY FAULT\nNever assume HPR/DPR/ECR/WNR/WRR/NWKR/RWKR or another relay abbreviation has a universal function. Use the station profile and approved circuit.\n\n" +
+                "8. OUTDOOR SUPPORT\nLocation boxes, point machines, signal units, detection equipment, trackside interfaces, cables and field connections are included.\n\n" +
+                "9. REQUIRED INPUTS\nStation profile → exact symptom → panel/VDU indication → equipment make/model → approved Control Table/Route Chart → signal/point circuit → relay-room drawing → location-box/field circuit → diagnostic screen/event log.\n\n" +
+                "10. AI RULE\nIf station type, equipment identity or circuit is unclear, request the missing information or approved drawing instead of guessing.\n\n" +
+                "SAFETY\nNever bypass, bridge, force, short or defeat a vital safety circuit. Follow the approved station-specific circuit, Railway instructions, manufacturer manual and authorised procedure.");
             return;
         }
 
