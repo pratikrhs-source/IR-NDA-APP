@@ -182,6 +182,23 @@ public class SntDashboardActivity extends Activity {
 
     void showModule(String title,String description) {
 
+        if ("FAULT FINDER".equals(title)) {
+            showTechnicalModule("FAULT FINDER",
+                "S&T FAULT FINDER — FIELD TROUBLESHOOTING\n\n" +
+                "1. FIRST RULE\nRecord the exact symptom, indication, equipment identity, time and operating condition before changing anything.\n\n" +
+                "2. UNIVERSAL FLOW\nSYMPTOM → IDENTIFY EQUIPMENT → RECORD INDICATIONS → CHECK POWER/HEALTH → CHECK INPUTS → CHECK OUTPUTS → TRACE APPROVED CIRCUIT/INTERFACE → FIND FIRST ABNORMAL CONDITION → RECTIFY UNDER AUTHORISED PROCEDURE → TEST AND RECORD.\n\n" +
+                "3. SIGNAL NOT CLEARING\nCheck track indication → point position → point detection → route conditions → conflicting routes → route locking → approach locking → signal control conditions → relay/EI correspondence.\n\n" +
+                "4. POINT NOT MOVING\nRecord panel indication → Normal/Reverse status → control command → control circuit → location box → point machine → detection → NWKR/RWKR or equivalent proving → correspondence.\n\n" +
+                "5. TRACK / AXLE COUNTER FAULT\nRecord affected section → clear/occupied indication → detection points → field unit/evaluator → communication → event log → approved reset conditions.\n\n" +
+                "6. EI FAULT\nRecord exact diagnostic/alarm → affected function → power/status → input/output interface → communication → event log. Do not repeatedly reset without recording evidence.\n\n" +
+                "7. BPAC / UFSBI FAULT\nRecord both ends indications → identify block interface → communication → equipment health → relay/interface indications → event log → authorised block procedure.\n\n" +
+                "8. KAVACH FAULT\nRecord locomotive ID, Kavach version, exact alarm/code → onboard status → radio status → RFID/location → signalling interface → diagnostic log.\n\n" +
+                "9. WHAT SHOULD I UPLOAD?\nUpload a clear panel photo or screenshot, equipment make/model/version, exact fault symptom, relevant approved circuit or interface drawing, diagnostic screen and event log if available.\n\n" +
+                "10. AI DIAGNOSIS RULE\nIf the circuit, indication or equipment identity is unclear, request a clearer image or approved drawing instead of guessing. AI provides decision support only.\n\n" +
+                "SAFETY\nNever bypass, bridge, force, short or defeat a vital safety circuit. Follow the approved station circuit, Railway instructions, manufacturer manual and authorised troubleshooting/restoration procedure.");
+            return;
+        }
+
         if ("ELECTRONIC INTERLOCKING".equals(title)) {
             showTechnicalModule("ELECTRONIC INTERLOCKING",
                 "ELECTRONIC INTERLOCKING — FIELD GUIDE\n\n" +
