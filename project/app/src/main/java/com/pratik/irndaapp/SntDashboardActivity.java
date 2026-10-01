@@ -220,6 +220,96 @@ public class SntDashboardActivity extends Activity {
         return "ACTIVE STATION PROFILE\nStation: "+st+"\nInterlocking: "+in+"\nRelay: "+re+"\nPanel/VDU: "+pa+"\nPoint Machine: "+pm+"\nDetection: "+de+"\nBlock System: "+bl+"\nKAVACH: "+ka+"\nOther: "+ot+"\n\n";
     }
 
+    void startFaultDiagnosis() {
+        android.content.SharedPreferences sp=getSharedPreferences("station_profile",MODE_PRIVATE);
+        String station=sp.getString("station","");
+        String interlocking=sp.getString("interlocking","");
+        String relay=sp.getString("relay","");
+        if(station.isEmpty() || interlocking.isEmpty()) {
+            new AlertDialog.Builder(this)
+                .setTitle("STATION PROFILE REQUIRED")
+                .setMessage("First enter Station Name/Code and Interlocking Type (PI/RRI/EI) in STATION PROFILE.")
+                .setNegativeButton("CLOSE",null)
+                .setPositiveButton("OPEN PROFILE",(d,w)->showStationProfile()).show();
+            return;
+        }
+        final String[] faults={
+            "Signal not clearing",
+            "Point not moving / detection fault",
+            "Track circuit / axle counter fault",
+            "EI / interlocking fault",
+            "BPAC / HASSDAC / UFSBI fault",
+            "KAVACH / TCAS fault",
+            "Other S&T fault"
+        };
+        new AlertDialog.Builder(this)
+            .setTitle("STEP 1 - SELECT FAULT")
+            .setItems(faults,(d,which)->askFaultLocation(faults[which],station,interlocking,relay))
+            .setNegativeButton("CANCEL",null).show();
+    }
+
+    void askFaultLocation(String fault,String station,String interlocking,String relay) {
+        final String[] locations={
+            "Indoor / Relay Room / EI Room",
+            "Outdoor / Location Box / Field",
+            "Both indoor and outdoor",
+            "Not sure yet"
+        };
+        new AlertDialog.Builder(this)
+            .setTitle("STEP 2 - WHERE IS THE SYMPTOM?")
+            .setMessage("Station: "+station+"\nSystem: "+interlocking+"\nRelay profile: "+relay)
+            .setItems(locations,(d,which)->askFaultIndication(fault,locations[which],station,interlocking,relay))
+            .setNegativeButton("BACK",(d,w)->startFaultDiagnosis()).show();
+    }
+
+    void askFaultIndication(String fault,String location,String station,String interlocking,String relay) {
+        final EditText input=new EditText(this);
+        input.setHint("Example: S1 not clearing / point 101 stuck Normal / section occupied");
+        input.setSingleLine(false);
+        input.setMinLines(3);
+        new AlertDialog.Builder(this)
+            .setTitle("STEP 3 - EXACT SYMPTOM / INDICATION")
+            .setMessage("Fault: "+fault+"\nLocation: "+location+"\n\nEnter the exact panel/VDU, relay-room or outdoor indication.")
+            .setView(input)
+            .setNegativeButton("BACK",(d,w)->askFaultLocation(fault,station,interlocking,relay))
+            .setPositiveButton("ANALYSE",(d,w)->showDiagnosisResult(fault,location,input.getText().toString().trim(),station,interlocking,relay))
+            .show();
+    }
+
+    void showDiagnosisResult(String fault,String location,String symptom,String station,String interlocking,String relay) {
+        String path;
+        if(fault.startsWith("Signal")) {
+            path="SIGNAL PATH\nPanel/VDU -> route conditions -> track detection -> point detection -> signal control -> relay/EI output -> relay room -> location box -> outdoor signal -> field correspondence.";
+        } else if(fault.startsWith("Point")) {
+            path="POINT PATH\nPanel command -> interlocking permission -> control relay/output -> approved circuit -> location box -> point machine -> control/motor supply -> movement -> detection -> NWKR/RWKR or equivalent -> panel correspondence.";
+        } else if(fault.startsWith("Track")) {
+            path="DETECTION PATH\nPanel section status -> detection point/field unit -> evaluator -> communication -> relay/interface -> event log -> field correspondence -> authorised reset conditions.";
+        } else if(fault.startsWith("EI")) {
+            path="EI PATH\nEI make/model/version -> diagnostic/alarm -> affected function -> power/status -> approved I/O/interface -> communication -> field equipment -> event log.";
+        } else if(fault.startsWith("BPAC")) {
+            path="BLOCK PATH\nBoth-end indications -> block interface -> communication -> equipment health -> relay/interface -> event log -> authorised block procedure -> field correspondence.";
+        } else if(fault.startsWith("KAVACH")) {
+            path="KAVACH PATH\nLoco ID/version -> onboard status -> radio -> RFID/location -> signalling interface -> diagnostic log -> trackside correspondence.";
+        } else {
+            path="GENERAL S&T PATH\nSymptom -> applicable system -> approved circuit/interface -> indoor equipment -> location box/interface -> outdoor equipment -> field correspondence -> first abnormal condition.";
+        }
+        String relayNote=relay.isEmpty()
+            ? "\nRelay family is not recorded. Do not assume relay type or designation."
+            : "\nRecorded relay profile: "+relay+". Exact relay/contact function must still be verified from the approved station circuit.";
+        String result=
+            "DIAGNOSTIC SUMMARY\n\n"+
+            "Station: "+station+"\n"+
+            "System: "+interlocking+"\n"+
+            "Fault: "+fault+"\n"+
+            "Location: "+location+"\n"+
+            "Reported indication: "+(symptom.isEmpty()?"Not entered":symptom)+"\n\n"+
+            path+relayNote+
+            "\n\nNEXT CHECK\nFind the first condition in this chain that does not correspond with the approved circuit/control table or actual field equipment. Record the observation before changing anything."+
+            "\n\nIF UNCERTAIN\nUpload the relevant approved circuit/control table, panel/VDU image, relay-room indication, location-box/field circuit or equipment diagnostic screen."+
+            "\n\nSAFETY\nNever bypass, bridge, force, short or defeat an interlocking/safety function. Follow authorised Railway and manufacturer procedures.";
+        showTechnicalModule("FAULT DIAGNOSIS",result);
+    }
+
     void showModule(String title,String description) {
 
         if ("STATION PROFILE".equals(title)) {
@@ -228,21 +318,10 @@ public class SntDashboardActivity extends Activity {
         }
 
         if ("FAULT FINDER".equals(title)) {
-            showTechnicalModule("FAULT FINDER",
-                stationProfileSummary() +
-                "S&T FAULT FINDER — PROFILE-AWARE INDOOR + OUTDOOR TROUBLESHOOTING\n\n" +
-                "1. FIRST STEP\nIdentify station type PI/RRI/EI, relay family, panel/VDU, detection system, block system, equipment makes and indoor/outdoor arrangement before diagnosis.\n\n" +
-                "2. UNIVERSAL FLOW\nSYMPTOM → STATION PROFILE → EQUIPMENT IDENTITY → PANEL/INDICATION → INDOOR LOGIC → APPROVED CIRCUIT → LOCATION BOX/INTERFACE → OUTDOOR EQUIPMENT → FIELD CORRESPONDENCE → FIRST ABNORMAL CONDITION.\n\n" +
-                "3. SIGNAL NOT CLEARING\nTrack detection → point position/detection → route conditions → locking → signal control → relay/EI condition → relay-room correspondence → location box/interface → outdoor signal.\n\n" +
-                "4. POINT NOT MOVING\nPanel command → interlocking permission → applicable control relay/output → approved circuit → location box → outdoor point machine → control/motor supply → detection → applicable NWKR/RWKR or equivalent → panel correspondence.\n\n" +
-                "5. TRACK / AXLE COUNTER\nIdentify installed detection system first. Then section indication → detection points → field unit → evaluator → communication → relay/interface → event log → authorised reset → outdoor correspondence.\n\n" +
-                "6. EI FAULT\nIdentify EI make/model/version → exact alarm → affected function → power/status → approved I/O/interface → communication → field equipment correspondence → event log.\n\n" +
-                "7. RELAY FAULT\nNever assume HPR/DPR/ECR/WNR/WRR/NWKR/RWKR or another relay abbreviation has a universal function. Use the station profile and approved circuit.\n\n" +
-                "8. OUTDOOR SUPPORT\nLocation boxes, point machines, signal units, detection equipment, trackside interfaces, cables and field connections are included.\n\n" +
-                "9. REQUIRED INPUTS\nStation profile → exact symptom → panel/VDU indication → equipment make/model → approved Control Table/Route Chart → signal/point circuit → relay-room drawing → location-box/field circuit → diagnostic screen/event log.\n\n" +
-                "10. AI RULE\nIf station type, equipment identity or circuit is unclear, request the missing information or approved drawing instead of guessing.\n\n" +
-                "SAFETY\nNever bypass, bridge, force, short or defeat a vital safety circuit. Follow the approved station-specific circuit, Railway instructions, manufacturer manual and authorised procedure.");
+            startFaultDiagnosis();
             return;
+
+
         }
 
         if ("ELECTRONIC INTERLOCKING".equals(title)) {
